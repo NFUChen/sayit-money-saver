@@ -1,0 +1,3 @@
+[submodule "smart_base_model"]
+	path = smart_base_model
+	url = git@github.com:NFUChen/smart_base_model.git
