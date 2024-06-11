@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Field, Relationship, SQLModel, Column
 
+
 class TransactionType(str, Enum):
     Revenue = "revenue"
     Expense = "expense"
@@ -13,14 +14,13 @@ class TransactionType(str, Enum):
 class User(SQLModel, table=True):
     __tablename__: str = "user"
 
-    
     user_name: str
     email: str = Field(unique=True)
     hashed_password: str
     is_active: bool
 
     transactions: list["Transaction"] = Relationship(back_populates="user")
-    id: int | None = Field(default= None,primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
 
 class TransactionItem(SQLModel, table=True):
@@ -37,27 +37,27 @@ class TransactionItem(SQLModel, table=True):
     )
 
 
-class Transaction(SQLModel, table= True):
+class Transaction(SQLModel, table=True):
     __tablename__: str = "transaction"
 
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
-    transaction_type: TransactionType = Field(index= True)
+    transaction_type: TransactionType = Field(index=True)
     amount: int
 
-    user_id: int | None = Field(default=None, foreign_key="user.id", index= True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     user: User = Relationship(back_populates="transactions")
 
     item_id: UUID | None = Field(default=None, foreign_key="transaction_item.id")
     item: TransactionItem = Relationship(back_populates="transaction")
 
     created_at: datetime.datetime = Field(
-        default_factory= lambda: datetime.datetime.now(datetime.timezone.utc),
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
     )
     updated_at: datetime.datetime | None = Field(
-        default_factory= lambda: datetime.datetime.now(datetime.timezone.utc),
-        sa_column=Column(DateTime(), onupdate=func.now())
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
+        sa_column=Column(DateTime(), onupdate=func.now()),
     )
 
     __table_args__ = (
-        CheckConstraint(Column('amount') >= 0, name='amount_non_negative'),
+        CheckConstraint(Column("amount") >= 0, name="amount_non_negative"),
     )

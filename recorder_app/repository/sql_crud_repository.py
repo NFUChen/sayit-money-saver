@@ -1,12 +1,22 @@
-from typing import Callable, Generic, Iterable, Optional, Type, TypeVar, TypedDict, get_args
+from typing import (
+    Callable,
+    Generic,
+    Iterable,
+    Optional,
+    Type,
+    TypeVar,
+    TypedDict,
+    get_args,
+)
 from uuid import UUID
 from loguru import logger
 
 from sqlalchemy import Engine, create_engine
 from sqlmodel import Session, SQLModel, select
 
-T = TypeVar("T", bound=  SQLModel)
+T = TypeVar("T", bound=SQLModel)
 ID = TypeVar("ID", UUID, int)
+
 
 class SQLConnectionParam(TypedDict):
     url: str
@@ -30,7 +40,10 @@ class SQLCrudRepository(Generic[ID, T]):
         return get_args(tp=cls.__mro__[0].__orig_bases__[0])
 
     def _commit_operation_in_session(
-        self, session_operation: Callable[[Session], None], session: Session, is_commit: bool
+        self,
+        session_operation: Callable[[Session], None],
+        session: Session,
+        is_commit: bool,
     ) -> bool:
         try:
             session_operation(session)
@@ -60,26 +73,42 @@ class SQLCrudRepository(Generic[ID, T]):
         statement = select(self.model_class)  # type: ignore
         return (list(session.exec(statement).all()), session)
 
-    def save(self, entity: T, session: Optional[Session] = None, is_commit: bool = True) -> T:
+    def save(
+        self, entity: T, session: Optional[Session] = None, is_commit: bool = True
+    ) -> T:
         self._commit_operation_in_session(
-            lambda session: session.add(entity), session or self._create_session(), is_commit
+            lambda session: session.add(entity),
+            session or self._create_session(),
+            is_commit,
         )
         return entity
 
     def save_all(
-        self, entities: Iterable[T], session: Optional[Session] = None, is_commit: bool = True
+        self,
+        entities: Iterable[T],
+        session: Optional[Session] = None,
+        is_commit: bool = True,
     ) -> bool:
         return self._commit_operation_in_session(
-            lambda session: session.add_all(entities), session or self._create_session(), is_commit
+            lambda session: session.add_all(entities),
+            session or self._create_session(),
+            is_commit,
         )
 
-    def delete(self, entity: T, session: Optional[Session] = None, is_commit: bool = True) -> bool:
+    def delete(
+        self, entity: T, session: Optional[Session] = None, is_commit: bool = True
+    ) -> bool:
         return self._commit_operation_in_session(
-            lambda session: session.delete(entity), session or self._create_session(), is_commit
+            lambda session: session.delete(entity),
+            session or self._create_session(),
+            is_commit,
         )
 
     def delete_all(
-        self, entities: Iterable[T], session: Optional[Session] = None, is_commit: bool = True
+        self,
+        entities: Iterable[T],
+        session: Optional[Session] = None,
+        is_commit: bool = True,
     ) -> bool:
         session = session or self._create_session()
         for entity in entities:
