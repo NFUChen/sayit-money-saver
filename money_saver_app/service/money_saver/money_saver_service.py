@@ -1,29 +1,46 @@
-
-
+from typing import Optional
 from sqlalchemy import Engine
 from sqlmodel import Session
 
 from money_saver_app.repository.models import Transaction, User
-from money_saver_app.repository.recorder_repository import TransactionRepository, UserRepository
+from money_saver_app.repository.recorder_repository import (
+    TransactionRepository,
+    UserRepository,
+    UserTokenRepository,
+)
 from money_saver_app.service.money_saver.views import TransactionView
 from money_saver_app.service.money_saver.error_code import UserNotFoundError
 
 
 class MoneySaverService:
-    def __init__(self, sql_engine: Engine, user_repo: UserRepository, transaction_repo: TransactionRepository) -> None:
+    def __init__(
+        self,
+        sql_engine: Engine,
+        user_repo: UserRepository,
+        transaction_repo: TransactionRepository,
+        user_token_rep: UserTokenRepository,
+    ) -> None:
         self.engine = sql_engine
+        self.user_token_rep = user_token_rep
         self.user_repo = user_repo
         self.transaction_repo = transaction_repo
 
     def save_user(self, user: User) -> None:
         self.user_repo.save(user)
 
-    def save_transaction_view(self, user_id: int,view: TransactionView) -> None:
+    def save_transaction_view(self, user_id: int, view: TransactionView) -> bool:
         with Session(self.engine) as session:
             user = self.user_repo.find_by_id(user_id, session)
             if user is None:
                 raise UserNotFoundError(user_id)
 
-            transaction = Transaction(transaction_type= view.transaction_type, amount= view.amount, user= user)
-            self.transaction_repo.save(transaction, session, is_commit= False)
+            transaction = Transaction(
+                transaction_type=view.transaction_type, amount=view.amount, user=user
+            )
+            self.transaction_repo.save(transaction, session, is_commit=False)
             session.commit()
+
+        return True
+
+    def get_user_id_by_token(self, token: str) -> Optional[int]:
+        return self.user_token_rep.get_uesr_id_by_token(token)

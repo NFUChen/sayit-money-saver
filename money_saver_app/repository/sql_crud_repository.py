@@ -65,13 +65,15 @@ class SQLCrudRepository(Generic[ID, T]):
         statement = select(self.model_class).where(self.model_class.id == id)  # type: ignore
         return session.exec(statement).first()
 
-    def find_all_by_ids(self, ids: list[ID], session: Optional[Session] = None) -> list[T]:
+    def find_all_by_ids(
+        self, ids: list[ID], session: Optional[Session] = None
+    ) -> list[T]:
         if session is None:
             session = self._create_session()
         statement = select(self.model_class).where(self.model_class.id.in_(ids))  # type: ignore
         return list(session.exec(statement).all())
 
-    def find_all(self,  session: Optional[Session] = None) -> list[T]:
+    def find_all(self, session: Optional[Session] = None) -> list[T]:
         if session is None:
             session = self._create_session()
         statement = select(self.model_class)  # type: ignore
@@ -80,7 +82,6 @@ class SQLCrudRepository(Generic[ID, T]):
     def save(
         self, entity: T, session: Optional[Session] = None, is_commit: bool = True
     ) -> T:
-
         self._commit_operation_in_session(
             lambda session: session.add(entity),
             session or self._create_session(),
