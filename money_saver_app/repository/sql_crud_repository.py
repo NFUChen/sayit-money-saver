@@ -56,26 +56,31 @@ class SQLCrudRepository(Generic[ID, T]):
         return True
 
     def _create_session(self) -> Session:
-        return Session(self.engine, expire_on_commit=True)
+        return Session(self.engine, expire_on_commit=False)
 
-    def find_by_id(self, id: ID) -> tuple[T, Session]:
-        session = self._create_session()
+    def find_by_id(self, id: ID, session: Optional[Session] = None) -> Optional[T]:
+        if session is None:
+            session = self._create_session()
+
         statement = select(self.model_class).where(self.model_class.id == id)  # type: ignore
-        return (session.exec(statement).one(), session)
+        return session.exec(statement).first()
 
-    def find_all_by_ids(self, ids: list[ID]) -> tuple[list[T], Session]:
-        session = self._create_session()
+    def find_all_by_ids(self, ids: list[ID], session: Optional[Session] = None) -> list[T]:
+        if session is None:
+            session = self._create_session()
         statement = select(self.model_class).where(self.model_class.id.in_(ids))  # type: ignore
-        return (list(session.exec(statement).all()), session)
+        return list(session.exec(statement).all())
 
-    def find_all(self) -> tuple[list[T], Session]:
-        session = self._create_session()
+    def find_all(self,  session: Optional[Session] = None) -> list[T]:
+        if session is None:
+            session = self._create_session()
         statement = select(self.model_class)  # type: ignore
-        return (list(session.exec(statement).all()), session)
+        return list(session.exec(statement).all())
 
     def save(
         self, entity: T, session: Optional[Session] = None, is_commit: bool = True
     ) -> T:
+
         self._commit_operation_in_session(
             lambda session: session.add(entity),
             session or self._create_session(),

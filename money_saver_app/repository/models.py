@@ -6,9 +6,10 @@ from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Field, Relationship, SQLModel, Column
 
 
+
 class TransactionType(str, Enum):
-    Revenue = "revenue"
-    Expense = "expense"
+    Revenue = "Revenue"
+    Expense = "Expense"
 
 
 class User(SQLModel, table=True):
