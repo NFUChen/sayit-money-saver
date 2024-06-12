@@ -18,10 +18,10 @@ class MoneySaverService:
         sql_engine: Engine,
         user_repo: UserRepository,
         transaction_repo: TransactionRepository,
-        user_token_rep: UserTokenRepository,
+        user_token_repo: UserTokenRepository,
     ) -> None:
         self.engine = sql_engine
-        self.user_token_rep = user_token_rep
+        self.user_token_repo = user_token_repo
         self.user_repo = user_repo
         self.transaction_repo = transaction_repo
 
@@ -43,4 +43,4 @@ class MoneySaverService:
         return True
 
     def get_user_id_by_token(self, token: str) -> Optional[int]:
-        return self.user_token_rep.get_uesr_id_by_token(token)
+        return self.user_token_repo.get_uesr_id_by_token(token)

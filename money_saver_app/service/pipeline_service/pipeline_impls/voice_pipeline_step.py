@@ -7,7 +7,7 @@ from money_saver_app.service.money_saver.error_code import (
 )
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.views import TransactionView
-from money_saver_app.service.pipeline_service.pipeline_steps.pipeline_step import (
+from money_saver_app.service.pipeline_service.pipeline_step import (
     PipelineContext,
     PipelineStep,
 )
