@@ -2,13 +2,12 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Type
 
+from loguru import logger
+
 from application.application_config import BaseApplicationConifig
 from money_saver_app.applicaion.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
-)
-from money_saver_app.controller.fastapi.voice_money_saver_controller import (
-    VoiceMoneySaverController,
 )
 from money_saver_app.repository.recorder_repository import (
     TransactionRepository,
@@ -83,6 +82,11 @@ class MoneySaverApplication:
 
         self.money_saver_service = MoneySaverService(engine, self.pipeline_factory)
 
+        self._handle_logger()
+
+    def _handle_logger(self) -> None:
+        logger.add("./log/server.log", rotation="1 day", retention="1 month")
+
     def _get_language_model(
         self, base_config: BaseApplicationConifig
     ) -> LargeLanguageModelBase:
@@ -99,5 +103,5 @@ class MoneySaverApplication:
 
         raise Exception("[NO MODEL CONFIG PROVIDED] Failed to create language model")
 
-    def run_controller(self, controller_cls: Type[VoiceMoneySaverController]) -> None:
+    def run_controller(self, controller_cls: Type[MoneySaverController]) -> None:
         controller_cls(self.user_service, self.money_saver_service).run()

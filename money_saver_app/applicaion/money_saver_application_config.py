@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 
 from application.application_config import BaseApplicationConifig
@@ -11,6 +12,7 @@ class ApplicationMode(Enum):
     PRODUCTION = "production"
 
 
+@dataclass
 class MoneySaverApplicationConfig:
     base_config: BaseApplicationConifig
     sql_url: str

@@ -51,7 +51,7 @@ class SQLCrudRepository(Generic[ID, T]):
                 session.commit()
         except Exception as error:
             logger.error(error)
-            return False
+            raise error
 
         return True
 

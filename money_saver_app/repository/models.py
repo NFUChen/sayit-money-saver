@@ -16,7 +16,7 @@ class User(SQLModel, table=True):
 
     user_name: str
     email: str = Field(unique=True)
-    hashed_password: str
+    hashed_password: str = Field(exclude=True)
     is_active: bool
 
     transactions: list["Transaction"] = Relationship(back_populates="user")
