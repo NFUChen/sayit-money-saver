@@ -4,13 +4,13 @@ from typing import (
     Iterable,
     Optional,
     Type,
-    TypeVar,
     TypedDict,
+    TypeVar,
     get_args,
 )
 from uuid import UUID
-from loguru import logger
 
+from loguru import logger
 from sqlalchemy import Engine, create_engine
 from sqlmodel import Session, SQLModel, select
 

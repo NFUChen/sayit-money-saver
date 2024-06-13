@@ -3,7 +3,7 @@ from enum import Enum
 from uuid import UUID, uuid4
 
 from sqlalchemy import CheckConstraint, DateTime, func
-from sqlmodel import Field, Relationship, SQLModel, Column
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 class TransactionType(str, Enum):

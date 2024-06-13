@@ -1,4 +1,5 @@
 from typing import TypedDict
+
 from typing_extensions import NotRequired
 
 from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModelConfig

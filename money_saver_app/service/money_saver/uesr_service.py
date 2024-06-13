@@ -1,4 +1,5 @@
 from typing import Optional
+
 from money_saver_app.repository.models import User
 from money_saver_app.repository.recorder_repository import (
     UserRepository,

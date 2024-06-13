@@ -1,7 +1,8 @@
 from typing import Literal
 
 from pydantic import Field
-from money_saver_app.repository.models import Transaction, TransactionType
+
+from money_saver_app.repository.models import TransactionType
 from smart_base_model.core.smart_base_model.smart_base_model import SmartBaseModel
 
 

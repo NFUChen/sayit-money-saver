@@ -55,7 +55,9 @@ class MoneySaverApplication:
 
         self.llm = self._get_language_model(app_config.base_config)
 
-        self.voice_recognizer = OpenAIWhiswerVoiceRecognizer()
+        self.voice_recognizer = OpenAIWhiswerVoiceRecognizer(
+            app_config.openai_whisper_config
+        )
 
         engine = SQLCrudRepository.create_all_tables(app_config.sql_url)
         self.user_repo = UserRepository(engine)

@@ -1,6 +1,8 @@
 from typing import Optional, cast
+
 from pydantic import Field
 from sqlmodel import Session
+
 from money_saver_app.service.money_saver.error_code import (
     OptionalTextMissingError,
     TokenNotFoundError,

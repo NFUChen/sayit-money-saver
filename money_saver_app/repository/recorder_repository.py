@@ -1,5 +1,6 @@
 from typing import Optional
-from money_saver_app.repository.models import Transaction, User, TransactionItem
+
+from money_saver_app.repository.models import Transaction, TransactionItem, User
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
 
 

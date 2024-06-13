@@ -9,5 +9,5 @@ class MockVoiceRecognizer(VoiceRecognizer):
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def recognize(self, voice_bytes: bytes) -> str:
+    def recognize(self, audio_bytes: bytes) -> str:
         return self.text
