@@ -1,0 +1,78 @@
+import copy
+from datetime import datetime, timedelta, timezone
+from typing import Optional, TypedDict
+from passlib.context import CryptContext
+
+from money_saver_app.repository.models import User
+from money_saver_app.service.money_saver.error_code import (
+    InvalidCredentialError,
+    UserNotFoundError,
+)
+from money_saver_app.service.money_saver.uesr_service import UserService
+import jwt
+
+
+class JwtConfig(TypedDict):
+    secret_key: str
+    access_token_expire_minutes: int
+
+
+JsonWebToken = str
+
+
+class AuthService:
+    """
+    The `AuthService` class provides authentication-related functionality for the Money Saver application.
+
+    It includes methods for:
+    - Verifying a user's password against a hashed password
+    - Generating a JSON Web Token (JWT) for a user based on their user data
+    - Logging in a user by their username or email, and returning a JWT
+    The class requires a `UserService` instance, a `CryptContext` for password hashing/verification, and a `JwtConfig` dictionary with the JWT secret key and access token expiration time.
+    """
+
+    def __init__(
+        self,
+        user_service: UserService,
+        password_context: CryptContext,
+        jwt_config: JwtConfig,
+    ) -> None:
+        self.jwt_config = jwt_config
+        self.user_service = user_service
+        self.password_context = password_context
+
+    def is_verified_password(self, raw_password: str, hashed_password: str) -> bool:
+        return self.password_context.verify(raw_password, hashed_password)
+
+    def __get_payload_jwt(self, payload: dict) -> JsonWebToken:
+        payload_copy = copy.deepcopy(payload.copy())
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=self.jwt_config["access_token_expire_minutes"]
+        )
+        payload_copy.update({"exp": expire})
+        return jwt.encode(
+            payload_copy, self.jwt_config["secret_key"], algorithm="HS256"
+        )
+
+    def __user_login_base_func(
+        self, optiona_user: Optional[User], input_password: str
+    ) -> JsonWebToken:
+        if optiona_user is None:
+            raise UserNotFoundError()
+
+        is_verfied = self.is_verified_password(
+            input_password, optiona_user.hashed_password
+        )
+        if not is_verfied:
+            raise InvalidCredentialError()
+        return self.__get_payload_jwt(optiona_user.model_dump())
+
+    def user_login_by_user_name(
+        self, user_name: str, input_password: str
+    ) -> JsonWebToken:
+        optional_user = self.user_service.get_user_by_user_name(user_name)
+        return self.__user_login_base_func(optional_user, input_password)
+
+    def user_login_by_email(self, email: str, input_password: str) -> JsonWebToken:
+        optiona_user = self.user_service.get_user_by_email(email)
+        return self.__user_login_base_func(optiona_user, input_password)

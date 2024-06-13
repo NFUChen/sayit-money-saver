@@ -5,7 +5,6 @@ from money_saver_app.service.money_saver.transaction_service import TransactionS
 from money_saver_app.service.money_saver.uesr_service import UserService
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
     StepTextToTransactionView,
-    StepTokenSeachUser,
     StepTransactionVivePersitence,
     StepVoiceParsing,
     VoicePipelineContext,
@@ -27,6 +26,16 @@ class VoicePipelineFactory(PipelineFactory): ...
 
 
 class VoiceProductionPipelineFactory(VoicePipelineFactory):
+    """
+    The `VoiceProductionPipelineFactory` class is responsible for creating a pipeline of steps for processing voice input in a production environment.
+    The pipeline includes the following steps:
+    1. `StepVoiceParsing`: Parses the voice input using the provided `VoiceRecognizer`.
+    2. `StepTextToTransactionView`: Converts the parsed text into a transaction view using the provided `LargeLanguageModelBase`.
+    3. `StepTransactionVivePersitence`: Persists the transaction view using the provided `TransactionService`.
+
+    The factory is initialized with the necessary dependencies, including `UserService`, `TransactionService`, `LargeLanguageModelBase`, and `VoiceRecognizer`.
+    """
+
     def __init__(
         self,
         user_service: UserService,
@@ -41,7 +50,6 @@ class VoiceProductionPipelineFactory(VoicePipelineFactory):
 
     def create_pipeline(self, context: VoicePipelineContext) -> Iterable[PipelineStep]:
         return [
-            StepTokenSeachUser(context, self.user_service),
             StepVoiceParsing(context, self.voice_recognizer),
             StepTextToTransactionView(context, self.llm),
             StepTransactionVivePersitence(context, self.transaction_service),

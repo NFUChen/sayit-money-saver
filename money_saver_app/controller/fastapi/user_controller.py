@@ -4,7 +4,6 @@ from fastapi import APIRouter, FastAPI
 from loguru import logger
 from money_saver_app.controller.fastapi.route_controller import RouterController
 from money_saver_app.repository.models import User
-from money_saver_app.service.money_saver.error_code import UserNotFoundError
 from money_saver_app.service.money_saver.uesr_service import Guest, UserService
 
 

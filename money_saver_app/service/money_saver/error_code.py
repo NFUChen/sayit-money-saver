@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Literal, Optional, TypedDict
 
 
 class LanguageDict(TypedDict):
@@ -21,8 +21,8 @@ class LanguageResource:
     """
 
     USER_NOT_FOUND: LanguageDict = {
-        "en": "User not found: {user_id}",
-        "chi": "使用者不存在: {user_id}",
+        "en": "User not found - ID: {user_id}, EMAIL: {user_email}",
+        "chi": "使用者不存在- ID: {user_id}, EMAIL: {user_email}",
     }
 
     TOKEN_NOT_FOUND: LanguageDict = {
@@ -38,8 +38,33 @@ class LanguageResource:
         "chi": "Transaction view not found for the given optional text and model. Source: {source}",
     }
 
+    INVALID_CREDENTIALS: LanguageDict = {
+        "en": "The password does not match",
+        "chi": "使用者密碼錯誤",
+    }
+
 
 class ErrorCodeWithError(Exception):
+    """
+    Represents a base exception class for error codes with associated error messages.
+
+    The `ErrorCodeWithError` class is a base exception class that provides a standard way to represent errors with associated error codes and localized error messages.
+    It is intended to be subclassed by more specific error classes.
+
+    The class has the following attributes:
+
+    - `LANGUAGE`: A literal type representing the language of the error message. The default value is `"chi"`.
+    - `ERROR_CODE`: An integer representing the error code. The default value is `500`.
+
+    When an instance of `ErrorCodeWithError` or a subclass is created, the following arguments are passed to the constructor:
+
+    - `error_code`: An integer representing the error code.
+    - `message_template`: A string representing the error message template, which can contain placeholders for additional information.
+    - `**kwargs`: Additional keyword arguments that will be used to format the error message template.
+
+    The `__str__` method returns a formatted error message string that includes the error code and the formatted error message.
+    """
+
     LANGUAGE: Literal["chi", "en"] = "chi"
     ERROR_CODE: int = 500
 
@@ -58,22 +83,23 @@ class ErrorCodeWithError(Exception):
 class UserNotFoundError(ErrorCodeWithError):
     ERROR_CODE = 404
 
-    def __init__(self, user_id: int) -> None:
+    def __init__(
+        self, user_id: Optional[int] = None, user_email: Optional[str] = None
+    ) -> None:
         super().__init__(
             self.ERROR_CODE,
             LanguageResource.USER_NOT_FOUND[self.LANGUAGE],
             user_id=user_id,
+            user_email=user_email,
         )
 
 
-class TokenNotFoundError(ErrorCodeWithError):
-    ERROR_CODE = 404
+class InvalidCredentialError(ErrorCodeWithError):
+    ERROR_CODE = 401
 
-    def __init__(self, token: str) -> None:
+    def __init__(self) -> None:
         super().__init__(
-            self.ERROR_CODE,
-            LanguageResource.TOKEN_NOT_FOUND[self.LANGUAGE],
-            token=token,
+            self.ERROR_CODE, LanguageResource.INVALID_CREDENTIALS[self.LANGUAGE]
         )
 
 

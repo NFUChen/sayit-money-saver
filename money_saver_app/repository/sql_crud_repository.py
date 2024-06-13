@@ -6,12 +6,14 @@ from typing import (
     Type,
     TypedDict,
     TypeVar,
+    Union,
     get_args,
 )
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, Select, create_engine
+from sqlmodel.sql.expression import SelectOfScalar, Select
 from sqlmodel import Session, SQLModel, select
 
 T = TypeVar("T", bound=SQLModel)
@@ -54,6 +56,10 @@ class SQLCrudRepository(Generic[ID, T]):
             raise error
 
         return True
+
+    def _find_by(self, statement: Union[Select, SelectOfScalar]) -> Optional[T]:
+        with Session(self.engine) as session:
+            return session.exec(statement).first()
 
     def _create_session(self) -> Session:
         return Session(self.engine, expire_on_commit=False)

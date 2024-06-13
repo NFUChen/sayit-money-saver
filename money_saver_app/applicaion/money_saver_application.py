@@ -15,6 +15,7 @@ from money_saver_app.repository.recorder_repository import (
     UserTokenRepository,
 )
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
+from money_saver_app.service.money_saver.auth_service import AuthService
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.transaction_service import TransactionService
 from money_saver_app.service.money_saver.uesr_service import UserService
@@ -28,6 +29,8 @@ from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisp
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModel
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModel
+
+from passlib.context import CryptContext
 
 
 @dataclass
@@ -54,6 +57,8 @@ class MoneySaverApplication:
 
         self.llm = self._get_language_model(app_config.base_config)
 
+        self.password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
         self.voice_recognizer = OpenAIWhiswerVoiceRecognizer(
             app_config.openai_whisper_config
         )
@@ -61,9 +66,12 @@ class MoneySaverApplication:
         engine = SQLCrudRepository.create_all_tables(app_config.sql_url)
         self.user_repo = UserRepository(engine)
         self.user_token_repo = UserTokenRepository()
-        self.user_service = UserService(self.user_repo, self.user_token_repo)
+
+        self.user_service = UserService(self.user_repo, self.password_context)
+        self.auth_service = AuthService(
+            self.user_service, self.password_context, app_config.jwt_config
+        )
         self.transaction_repo = TransactionRepository(engine)
-        self.user_token_repo = UserTokenRepository()
 
         self.transaction_service = TransactionService(
             engine, self.user_repo, self.transaction_repo

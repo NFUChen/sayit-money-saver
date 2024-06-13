@@ -16,6 +16,23 @@ from money_saver_app.controller.fastapi.user_controller import UesrController
 
 @dataclass
 class VoiceMoneySaverWebController(MoneySaverController, RouterController):
+    """
+    The `VoiceMoneySaverWebController` class is responsible for setting up and running the FastAPI application for the Money Saver API.
+    It inherits from `MoneySaverController` and `RouterController` to leverage their functionality.
+
+    The `__post_init__` method is called after the object is initialized, and it performs the following tasks:
+    - Creates a FastAPI application instance and assigns it to the `app` attribute.
+    - Registers the routes for the application by calling the `register_routes` method.
+    - Adds CORS middleware to the application to allow cross-origin requests.
+    - Adds an exception middleware to the application to handle exceptions.
+
+    The `register_routes` method sets up the routes for the application, including:
+    - A root route that returns a welcome message.
+    - Registering the `UesrController` with the `/api/admin` prefix.
+
+    The `run` method starts the FastAPI application using the `uvicorn` server, listening on `0.0.0.0:8000`.
+    """
+
     def __post_init__(self) -> None:
         self.app = FastAPI()
         self.register_routes()

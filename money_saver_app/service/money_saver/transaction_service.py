@@ -11,6 +11,23 @@ from money_saver_app.service.money_saver.views import TransactionView
 
 
 class TransactionService:
+    """
+    Provides a service for saving transactions for a user.
+
+    The `TransactionService` class is responsible for managing the creation and persistence of transactions for a user. It interacts with the `UserRepository` and `TransactionRepository` to handle the underlying data storage and retrieval.
+
+    Args:
+        sql_engine (Engine): The SQLAlchemy engine used for database connections.
+        user_repo (UserRepository): The repository for managing user data.
+        transaction_repo (TransactionRepository): The repository for managing transaction data.
+
+    Raises:
+        UserNotFoundError: If the user associated with the transaction is not found.
+
+    Returns:
+        bool: True if the transaction was successfully saved, False otherwise.
+    """
+
     def __init__(
         self,
         sql_engine: Engine,

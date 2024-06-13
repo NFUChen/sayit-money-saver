@@ -5,11 +5,9 @@ from sqlmodel import Session
 
 from money_saver_app.service.money_saver.error_code import (
     OptionalTextMissingError,
-    TokenNotFoundError,
     TransactionViewNotFoundError,
 )
 from money_saver_app.service.money_saver.transaction_service import TransactionService
-from money_saver_app.service.money_saver.uesr_service import UserService
 from money_saver_app.service.money_saver.views import TransactionView
 from money_saver_app.service.pipeline_service.pipeline_step import (
     PipelineContext,
@@ -38,27 +36,6 @@ class VoicePipelineContext(PipelineContext):
     user_id: Optional[int] = 1
     transcribed_text: Optional[str] = None
     is_saved: bool = False
-
-
-class StepTokenSeachUser(PipelineStep):
-    """
-    Represents a pipeline step that searches for a user by token.
-    """
-
-    def __init__(
-        self, context: VoicePipelineContext, user_service: UserService
-    ) -> None:
-        self.context = context
-        self.user_service = user_service
-
-    def execute(self) -> None:
-        optional_user_id = self.user_service.get_user_id_by_token(self.context.token)
-
-        optional_user_id = self.user_service.get_user_id_by_token(self.context.token)
-        if optional_user_id is None:
-            raise TokenNotFoundError(self.context.token)
-
-        self.context.user_id = optional_user_id
 
 
 class StepVoiceParsing(PipelineStep):
