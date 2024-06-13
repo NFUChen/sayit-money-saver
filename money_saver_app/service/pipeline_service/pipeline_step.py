@@ -1,7 +1,13 @@
 from abc import ABC
 
+from pydantic import BaseModel
 
-class PipelineContext: ...
+
+class PipelineContext(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    ...
 
 
 class PipelineStep(ABC):

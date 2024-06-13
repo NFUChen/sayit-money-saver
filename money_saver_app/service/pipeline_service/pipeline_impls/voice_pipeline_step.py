@@ -1,11 +1,13 @@
 from typing import Optional, cast
+from pydantic import Field
 from sqlmodel import Session
 from money_saver_app.service.money_saver.error_code import (
     OptionalTextMissingError,
     TokenNotFoundError,
     TransactionViewNotFoundError,
 )
-from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
+from money_saver_app.service.money_saver.transaction_service import TransactionService
+from money_saver_app.service.money_saver.uesr_service import UserService
 from money_saver_app.service.money_saver.views import TransactionView
 from money_saver_app.service.pipeline_service.pipeline_step import (
     PipelineContext,
@@ -26,8 +28,8 @@ class VoicePipelineContext(PipelineContext):
         transcribed_text (Optional[str]): The optional transcribed text from the voice data.
     """
 
-    voice_bytes: bytes
-    session: Session
+    voice_bytes: bytes = Field(exclude=True)
+    session: Session = Field(exclude=True)
     token: str
 
     view: Optional[TransactionView] = None
@@ -42,19 +44,15 @@ class StepTokenSeachUser(PipelineStep):
     """
 
     def __init__(
-        self, context: VoicePipelineContext, money_saver_service: MoneySaverService
+        self, context: VoicePipelineContext, user_service: UserService
     ) -> None:
         self.context = context
-        self.money_saver_service = money_saver_service
+        self.user_service = user_service
 
     def execute(self) -> None:
-        optional_user_id = self.money_saver_service.get_user_id_by_token(
-            self.context.token
-        )
+        optional_user_id = self.user_service.get_user_id_by_token(self.context.token)
 
-        optional_user_id = self.money_saver_service.get_user_id_by_token(
-            self.context.token
-        )
+        optional_user_id = self.user_service.get_user_id_by_token(self.context.token)
         if optional_user_id is None:
             raise TokenNotFoundError(self.context.token)
 
@@ -137,17 +135,17 @@ class StepTransactionVivePersitence(PipelineStep):
     """
 
     def __init__(
-        self, context: VoicePipelineContext, money_saver_service: MoneySaverService
+        self, context: VoicePipelineContext, transaction_service: TransactionService
     ) -> None:
         self.context = context
-        self.money_saver_service = money_saver_service
+        self.transaction_service = transaction_service
 
     def execute(self) -> None:
         optional_view = self.context.view
         if optional_view is None:
             raise TransactionViewNotFoundError()
 
-        is_saved = self.money_saver_service.save_transaction_view(
+        is_saved = self.transaction_service.save_transaction_view(
             cast(int, self.context.user_id), optional_view
         )
 

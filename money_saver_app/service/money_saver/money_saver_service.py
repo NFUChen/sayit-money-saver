@@ -1,46 +1,31 @@
-from typing import Optional
 from sqlalchemy import Engine
 from sqlmodel import Session
 
-from money_saver_app.repository.models import Transaction, User
-from money_saver_app.repository.recorder_repository import (
-    TransactionRepository,
-    UserRepository,
-    UserTokenRepository,
+from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory import (
+    VoiceDevelopmentPipelineFactory,
+    VoicePipelineFactory,
 )
-from money_saver_app.service.money_saver.views import TransactionView
-from money_saver_app.service.money_saver.error_code import UserNotFoundError
+from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
+    VoicePipelineContext,
+)
 
 
 class MoneySaverService:
     def __init__(
         self,
-        sql_engine: Engine,
-        user_repo: UserRepository,
-        transaction_repo: TransactionRepository,
-        user_token_repo: UserTokenRepository,
+        engine: Engine,
+        voice_pipeline_factory: VoicePipelineFactory | VoiceDevelopmentPipelineFactory,
     ) -> None:
-        self.engine = sql_engine
-        self.user_token_repo = user_token_repo
-        self.user_repo = user_repo
-        self.transaction_repo = transaction_repo
+        self.engine = engine
+        self.factory = voice_pipeline_factory
 
-    def save_user(self, user: User) -> None:
-        self.user_repo.save(user)
-
-    def save_transaction_view(self, user_id: int, view: TransactionView) -> bool:
+    def execute_pipeline(self, voice_bytes: bytes, token: str) -> bool:
         with Session(self.engine) as session:
-            user = self.user_repo.find_by_id(user_id, session)
-            if user is None:
-                raise UserNotFoundError(user_id)
-
-            transaction = Transaction(
-                transaction_type=view.transaction_type, amount=view.amount, user=user
+            context = VoicePipelineContext(
+                voice_bytes=voice_bytes, session=session, token=token
             )
-            self.transaction_repo.save(transaction, session, is_commit=False)
-            session.commit()
+            steps = self.factory.create_pipeline(context)
+            for step in steps:
+                step.execute()
 
         return True
-
-    def get_user_id_by_token(self, token: str) -> Optional[int]:
-        return self.user_token_repo.get_uesr_id_by_token(token)

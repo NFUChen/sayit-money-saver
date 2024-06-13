@@ -38,12 +38,12 @@ class TransactionView(SmartBaseModel["TransactionView"]):
     The `item` field holds a `TransactionItemView` object representing the item associated with the transaction.
 
     Note:
-     - This model is used within the context of a money saver app, where most transactions are categorized as expenses.
-     - However, there are exceptions for revenue transactions, such as bank savings and personal savings etc.
+     - This model is used within the context of a money saver app, where most transactions are categorized as expenses （成本, 費用）.
+     - However, there are exceptions for revenue transactions, such as bank savings (銀行儲蓄、個人儲蓄、銀行存款、個人存款、活期、活期儲蓄存) and personal savings etc.
 
     注意：
         此模型在記帳軟體的基礎下使用，其中大多數交易（成本, 費用）被分類為支出 (Expense)。
-        但也有交易列為收入的情況，例如銀行儲蓄、個人儲蓄、銀行存款、個人存款、活期等、活期儲蓄存款等、此類狀況下請歸類為 收入 (Revenue)。
+        但也有交易列為收入的情況，例如銀行儲蓄、個人儲蓄、銀行存款、個人存款、活期、活期儲蓄存款等、此類狀況下請歸類為 收入 (Revenue)。
         絕大部分使用者為中文使用者, 請使用『繁體中文』回答
     """
 
