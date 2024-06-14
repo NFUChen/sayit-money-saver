@@ -40,4 +40,3 @@ class AuthMiddleware:
 
         request.state.user = jwt_user
         return await call_next(request)
-

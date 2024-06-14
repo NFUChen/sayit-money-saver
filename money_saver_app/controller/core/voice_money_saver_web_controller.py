@@ -102,7 +102,7 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
         self.route_controllers: Iterable[RouterController] = [
             AuthController("/api/public/auth", self.auth_service, self.user_service),
             UesrController("/api/private/admin", self.user_service),
-            TransactionController("/api/private/personal", self.transaction_service)
+            TransactionController("/api/private/personal", self.transaction_service),
         ]
 
         for controller in self.route_controllers:

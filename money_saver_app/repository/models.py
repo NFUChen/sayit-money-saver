@@ -6,10 +6,10 @@ from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Column, Field, Relationship, SQLModel
 
 from money_saver_app.service.money_saver.view_model_common import TransactionType
-from money_saver_app.service.money_saver.views import TransactionItemView, TransactionView
-
-
-
+from money_saver_app.service.money_saver.views import (
+    TransactionItemView,
+    TransactionView,
+)
 
 
 class Role(str, Enum):
@@ -40,8 +40,14 @@ class TransactionItem(SQLModel, table=True):
 
     updated_at: datetime.datetime | None = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
-        sa_column=Column(DateTime(), onupdate=func.now())
+        sa_column=Column(DateTime(), onupdate=func.now()),
     )
+
+
+class TransactionRead(TransactionView):
+    updated_at: datetime.datetime | None
+    created_at: datetime.datetime | None
+
 
 class Transaction(SQLModel, table=True):
     __tablename__: str = "transaction"
@@ -54,7 +60,9 @@ class Transaction(SQLModel, table=True):
     user: User = Relationship(back_populates="transactions")
 
     item_id: UUID | None = Field(default=None, foreign_key="transaction_item.id")
-    item: TransactionItem = Relationship(back_populates="transaction", sa_relationship_kwargs={"lazy": "joined"})
+    item: TransactionItem = Relationship(
+        back_populates="transaction", sa_relationship_kwargs={"lazy": "joined"}
+    )
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
@@ -68,8 +76,15 @@ class Transaction(SQLModel, table=True):
         CheckConstraint(Column("amount") >= 0, name="amount_non_negative"),
     )
 
-    def as_view(self) -> TransactionView:
-        item_view = TransactionItemView(name = self.item.name, description= self.item.description, item_category= self.item.item_category)
-        return TransactionView(transaction_type= self.transaction_type, amount= self.amount, item= item_view)
-
-
+    def as_read(self) -> TransactionRead:
+        return TransactionRead(
+            transaction_type=self.transaction_type,
+            amount=self.amount,
+            item=TransactionItemView(
+                name=self.item.name,
+                description=self.item.description,
+                item_category=self.item.item_category,
+            ),
+            updated_at=self.updated_at,
+            created_at=self.created_at,
+        )

@@ -45,18 +45,21 @@ class TransactionService:
             if user is None:
                 raise UserNotFoundError(user_id)
             item = TransactionItem(
-                name =  view.item.name, 
-                description=  view.item.description,
-                item_category= view.item.item_category
+                name=view.item.name,
+                description=view.item.description,
+                item_category=view.item.item_category,
             )
             transaction = Transaction(
-                transaction_type=view.transaction_type, amount=view.amount, user=user, item= item
+                transaction_type=view.transaction_type,
+                amount=view.amount,
+                user=user,
+                item=item,
             )
 
             session.add(transaction)
             session.commit()
 
         return True
-    
-    def get_all_transaction_by_user_id(self, id: int) -> Iterable[TransactionView]:
-        return [_model.as_view() for _model in self.transaction_repo.find_all_transaction_by_user_id(id)]
+
+    def get_all_transaction_by_user_id(self, id: int) -> Iterable[Transaction]:
+        return self.transaction_repo.find_all_transaction_by_user_id(id)

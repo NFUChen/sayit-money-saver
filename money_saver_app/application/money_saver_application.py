@@ -122,5 +122,5 @@ class MoneySaverApplication:
             self.user_service,
             self.auth_service,
             self.money_saver_service,
-            self.transaction_service
+            self.transaction_service,
         ).run()

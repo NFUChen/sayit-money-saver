@@ -126,6 +126,8 @@ class StepTransactionVivePersistence(PipelineStep[MoneySaverPipelineContext]):
         if optional_view is None:
             raise TransactionViewNotFoundError()
 
-        is_saved = self.transaction_service.save_transaction_view(self.context.user_id, optional_view)
+        is_saved = self.transaction_service.save_transaction_view(
+            self.context.user_id, optional_view
+        )
 
         self.context.is_saved = is_saved
