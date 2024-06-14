@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from money_saver_app.controller.fastapi.route_controller import RouterController
 from money_saver_app.repository.models import User
-from money_saver_app.service.money_saver.user_service import Guest, UserService
+from money_saver_app.service.money_saver.user_service import UserService
 
 
 class UesrController(RouterController):
@@ -18,10 +18,5 @@ class UesrController(RouterController):
         @router.get("/users")
         def get_all_uesrs() -> Iterable[User]:
             return self.user_service.get_all_users()
-
-        @router.post("/users")
-        def register_user(user: Guest) -> User:
-            registerd_user = self.user_service.register_user(user)
-            return registerd_user
 
         return router

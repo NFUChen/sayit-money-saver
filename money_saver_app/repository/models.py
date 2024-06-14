@@ -11,16 +11,21 @@ class TransactionType(str, Enum):
     Expense = "Expense"
 
 
+class Role(str, Enum):
+    Admin = "Admin"
+    User = "User"
+    Guest = "Guest"
+    BlockedUser = "BlockedUser"
+
+
 class User(SQLModel, table=True):
     __tablename__: str = "user"
-
     user_name: str
     email: str = Field(unique=True)
     hashed_password: str = Field(exclude=True)
-    is_active: bool
-
     transactions: list["Transaction"] = Relationship(back_populates="user")
     id: int | None = Field(default=None, primary_key=True)
+    role: Role
 
 
 class TransactionItem(SQLModel, table=True):

@@ -2,6 +2,8 @@ from typing import Literal, Optional, TypedDict
 
 from fastapi import status
 
+from money_saver_app.repository.models import Role
+
 
 class LanguageDict(TypedDict):
     """
@@ -45,6 +47,15 @@ class LanguageResource:
         "chi": "使用者密碼錯誤",
     }
 
+    ROLE_PERMISSION_DENIED: LanguageDict = {
+        "en": "Role permission denied: {required_role}, actual roles: {actual_role}",
+        "chi": "使用者權限不足: {required_role}, 實際權限: {actual_role}",
+    }
+    EMAIL_DUPLICATE: LanguageDict = {
+        "en": "The email has been registered.",
+        "chi": "該電子郵件已經被註冊",
+    }
+
 
 class ErrorCodeWithError(Exception):
     """
@@ -80,17 +91,35 @@ class ErrorCodeWithError(Exception):
         return self.message_template.format(**self.error_kwargs)
 
 
-class UserNotFoundError(ErrorCodeWithError):
-    ERROR_CODE = 404
+class OptionalTextMissingError(ErrorCodeWithError):
+    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    def __init__(
-        self, user_id: Optional[int] = None, user_email: Optional[str] = None
-    ) -> None:
+    def __init__(self) -> None:
+        super().__init__(
+            self.ERROR_CODE, LanguageResource.OPTIONAL_TEXT_MISSING[self.LANGUAGE]
+        )
+
+
+class TransactionViewNotFoundError(ErrorCodeWithError):
+    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    def __init__(self, text: str = "") -> None:
         super().__init__(
             self.ERROR_CODE,
-            LanguageResource.USER_NOT_FOUND[self.LANGUAGE],
-            user_id=user_id,
-            user_email=user_email,
+            "Transaction view not found for the given text.",
+            source=text,
+        )
+
+
+class RolePermissionDenied(ErrorCodeWithError):
+    ERROR_CODE = status.HTTP_401_UNAUTHORIZED
+
+    def __init__(self, required_role: Role, actual_role: Role) -> None:
+        super().__init__(
+            self.ERROR_CODE,
+            LanguageResource.ROLE_PERMISSION_DENIED[self.LANGUAGE].format(
+                required_role=required_role, actual_role=actual_role
+            ),
         )
 
 
@@ -103,22 +132,24 @@ class PasswordNotMatchError(ErrorCodeWithError):
         )
 
 
-class OptionalTextMissingError(ErrorCodeWithError):
-    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+class UserNotFoundError(ErrorCodeWithError):
+    ERROR_CODE = status.HTTP_404_NOT_FOUND
 
-    def __init__(self) -> None:
+    def __init__(
+        self, user_id: Optional[int] = None, user_email: Optional[str] = None
+    ) -> None:
         super().__init__(
-            self.ERROR_CODE, LanguageResource.OPTIONAL_TEXT_MISSING[self.LANGUAGE]
+            self.ERROR_CODE,
+            LanguageResource.USER_NOT_FOUND[self.LANGUAGE],
+            user_id=user_id,
+            user_email=user_email,
         )
 
 
-class TransactionViewNotFoundError(ErrorCodeWithError):
-    LANGUAGE: Literal["chi", "en"] = "en"
-    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+class EmailDuplicationError(ErrorCodeWithError):
+    ERROR_CODE = status.HTTP_409_CONFLICT
 
-    def __init__(self, text: str = "") -> None:
+    def __init__(self) -> None:
         super().__init__(
-            self.ERROR_CODE,
-            "Transaction view not found for the given text.",
-            source=text,
+            self.ERROR_CODE, LanguageResource.EMAIL_DUPLICATE[self.LANGUAGE]
         )

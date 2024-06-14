@@ -50,8 +50,12 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
         self.register_middlewares()
 
     def register_middlewares(self) -> None:
-        self.app.middleware("http")(ExceptionMiddleware())
-        self.app.middleware("http")(AuthMiddleware(self.auth_service, ["/api/public"]))
+        middlewares = [
+            ExceptionMiddleware(),
+            AuthMiddleware(self.auth_service, ["/api/public"]),
+        ]
+        for middleware in middlewares:
+            self.app.middleware("http")(middleware)
 
     def register_routes(self) -> None:
         @self.app.get("/")
@@ -59,7 +63,7 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
             return {"message": "Welcome to Money Saver API"}
 
         self.route_controllers: Iterable[RouterController] = [
-            AuthController("/api/public/auth", self.auth_service),
+            AuthController("/api/public/auth", self.auth_service, self.user_service),
             UesrController("/api/private/admin", self.user_service),
         ]
 

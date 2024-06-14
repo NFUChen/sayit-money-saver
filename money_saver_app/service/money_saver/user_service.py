@@ -4,8 +4,12 @@ from loguru import logger
 from openai import BaseModel
 from passlib.context import CryptContext
 
-from money_saver_app.repository.models import User
+from money_saver_app.repository.models import Role, User
 from money_saver_app.repository.recorder_repository import UserRepository
+from money_saver_app.service.money_saver.error_code import (
+    EmailDuplicationError,
+    UserNotFoundError,
+)
 
 
 class Guest(BaseModel):
@@ -41,12 +45,28 @@ class UserService:
         self.password_context = password_context
         self.user_repo = user_repo
 
+    def get_user_role_by_id(self, id: int) -> Role:
+        optional_user = self.get_user_by_id(id)
+        if optional_user is None:
+            raise UserNotFoundError(user_id=id)
+
+        return optional_user.role
+
+    def is_user_a_role_type_by_id(self, id: int, role: Role) -> bool:
+        return role == self.get_user_role_by_id(id)
+
+    def is_user_exist_by_email(self, email: str) -> bool:
+        return self.user_repo.find_user_by_email(email) is not None
+
     def register_user(self, guest: Guest) -> User:
+        if self.is_user_exist_by_email(guest.email):
+            raise EmailDuplicationError()
+
         user = User(
             user_name=guest.user_name,
             email=guest.email,
             hashed_password=self.__get_hashed_password(guest.password),
-            is_active=False,
+            role=Role.Guest,
         )
         saved_user = self.user_repo.save(user)
         logger.info(f"[NEW USER] New user registered: {saved_user.user_name}")

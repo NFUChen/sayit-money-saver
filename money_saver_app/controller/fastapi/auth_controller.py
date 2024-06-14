@@ -6,7 +6,9 @@ from loguru import logger
 from openai import BaseModel
 
 from money_saver_app.controller.fastapi.route_controller import RouterController
+from money_saver_app.repository.models import User
 from money_saver_app.service.money_saver.auth_service import AuthService
+from money_saver_app.service.money_saver.user_service import Guest, UserService
 
 
 class CredentialContext(BaseModel):
@@ -27,9 +29,12 @@ CredentialType = Optional[Union[EmailCredential, UserNameCredential]]
 class AuthController(RouterController):
     COOKIE_NAME = "jwt"
 
-    def __init__(self, route_prefix: str, auth_service: AuthService) -> None:
+    def __init__(
+        self, route_prefix: str, auth_service: AuthService, user_service: UserService
+    ) -> None:
         self.route_prefix = route_prefix
         self.auth_service = auth_service
+        self.user_service = user_service
 
     def register_routes(self) -> APIRouter:
         router = APIRouter(prefix=self.route_prefix)
@@ -45,6 +50,11 @@ class AuthController(RouterController):
             token = self._handle_token_from_credential(credential)
             base_response.set_cookie(key=self.COOKIE_NAME, value=token, httponly=True)
             return base_response
+
+        @router.post("/register_guest")
+        def register_user(user: Guest) -> User:
+            registerd_user = self.user_service.register_user(user)
+            return registerd_user
 
         return router
 
