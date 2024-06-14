@@ -5,10 +5,11 @@ from uuid import UUID, uuid4
 from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Column, Field, Relationship, SQLModel
 
+from money_saver_app.service.money_saver.view_model_common import TransactionType
+from money_saver_app.service.money_saver.views import TransactionItemView, TransactionView
 
-class TransactionType(str, Enum):
-    Revenue = "Revenue"
-    Expense = "Expense"
+
+
 
 
 class Role(str, Enum):
@@ -38,9 +39,9 @@ class TransactionItem(SQLModel, table=True):
     transaction: "Transaction" = Relationship(back_populates="item")
 
     updated_at: datetime.datetime | None = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
         sa_column=Column(DateTime(), onupdate=func.now())
     )
-
 
 class Transaction(SQLModel, table=True):
     __tablename__: str = "transaction"
@@ -53,7 +54,7 @@ class Transaction(SQLModel, table=True):
     user: User = Relationship(back_populates="transactions")
 
     item_id: UUID | None = Field(default=None, foreign_key="transaction_item.id")
-    item: TransactionItem = Relationship(back_populates="transaction")
+    item: TransactionItem = Relationship(back_populates="transaction", sa_relationship_kwargs={"lazy": "joined"})
 
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.timezone.utc),
@@ -66,3 +67,9 @@ class Transaction(SQLModel, table=True):
     __table_args__ = (
         CheckConstraint(Column("amount") >= 0, name="amount_non_negative"),
     )
+
+    def as_view(self) -> TransactionView:
+        item_view = TransactionItemView(name = self.item.name, description= self.item.description, item_category= self.item.item_category)
+        return TransactionView(transaction_type= self.transaction_type, amount= self.amount, item= item_view)
+
+

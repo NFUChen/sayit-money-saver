@@ -1,7 +1,8 @@
+from typing import Iterable
 from sqlalchemy import Engine
 from sqlmodel import Session
 
-from money_saver_app.repository.models import Transaction
+from money_saver_app.repository.models import Transaction, TransactionItem
 from money_saver_app.repository.recorder_repository import (
     TransactionRepository,
     UserRepository,
@@ -43,11 +44,19 @@ class TransactionService:
             user = self.user_repo.find_by_id(user_id, session)
             if user is None:
                 raise UserNotFoundError(user_id)
-
-            transaction = Transaction(
-                transaction_type=view.transaction_type, amount=view.amount, user=user
+            item = TransactionItem(
+                name =  view.item.name, 
+                description=  view.item.description,
+                item_category= view.item.item_category
             )
-            self.transaction_repo.save(transaction, session, is_commit=False)
+            transaction = Transaction(
+                transaction_type=view.transaction_type, amount=view.amount, user=user, item= item
+            )
+
+            session.add(transaction)
             session.commit()
 
         return True
+    
+    def get_all_transaction_by_user_id(self, id: int) -> Iterable[TransactionView]:
+        return [_model.as_view() for _model in self.transaction_repo.find_all_transaction_by_user_id(id)]

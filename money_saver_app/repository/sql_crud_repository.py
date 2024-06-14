@@ -60,6 +60,10 @@ class SQLCrudRepository(Generic[ID, T]):
     def _find_by(self, statement: Union[Select, SelectOfScalar]) -> Optional[T]:
         with Session(self.engine) as session:
             return session.exec(statement).first()
+        
+    def _find_all_by(self, statement: Union[Select, SelectOfScalar]) -> list[T]:
+        with Session(self.engine) as session:
+            return list(session.exec(statement))
 
     def _create_session(self) -> Session:
         return Session(self.engine, expire_on_commit=False)

@@ -28,7 +28,6 @@ from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisp
     OpenAIWhisperVoiceRecognizer,
 )
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
-from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModel
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModel
 
 
@@ -38,6 +37,7 @@ class MoneySaverController(ABC):
     user_service: UserService
     auth_service: AuthService
     money_saver_service: MoneySaverService
+    transaction_service: TransactionService
 
     def run(self) -> None: ...
 
@@ -122,4 +122,5 @@ class MoneySaverApplication:
             self.user_service,
             self.auth_service,
             self.money_saver_service,
+            self.transaction_service
         ).run()
