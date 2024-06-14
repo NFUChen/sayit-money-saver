@@ -33,6 +33,7 @@ from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIMod
 
 @dataclass
 class MoneySaverController(ABC):
+    app_config: MoneySaverApplicationConfig
     user_service: UserService
     auth_service: AuthService
     money_saver_service: MoneySaverService
@@ -113,5 +114,8 @@ class MoneySaverApplication:
 
     def run_controller(self, controller_cls: Type[MoneySaverController]) -> None:
         controller_cls(
-            self.user_service, self.auth_service, self.money_saver_service
+            self.app_config,
+            self.user_service, 
+            self.auth_service, 
+            self.money_saver_service,
         ).run()

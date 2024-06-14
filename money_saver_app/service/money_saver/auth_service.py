@@ -49,7 +49,7 @@ class AuthService:
         self.secret_key = self.jwt_config["secret_key"]
         self.jwt_algorithm = "HS256"
 
-    def get_user_from_jwt(self, token: str) -> Optional[User]:
+    def get_jwt_user_from_jwt(self, token: str) -> Optional[JWTUser]:
         """
         Validates a JSON Web Token (JWT) by decoding it using the configured secret key and algorithm.
 
@@ -62,12 +62,15 @@ class AuthService:
             )
             user_id = jwt_user["id"]
             optional_user = self.user_service.get_user_by_id(user_id)
+            if optional_user is None:
+                raise UserNotFoundError(user_id= user_id)
 
         except jwt.exceptions.InvalidTokenError as invalid_token_error:
             logger.exception(invalid_token_error)
             return
-
-        return optional_user
+        
+        
+        return jwt_user
 
     def __is_verified_password(self, raw_password: str, hashed_password: str) -> bool:
         return self.password_context.verify(raw_password, hashed_password)

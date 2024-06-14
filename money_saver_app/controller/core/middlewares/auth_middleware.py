@@ -31,5 +31,13 @@ class AuthMiddleware:
                 content={"detail": "Please login first", "timestamp": utc_time},
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
+        jwt_user = self.auth_service.get_jwt_user_from_jwt(optional_jwt)
+        if jwt_user is None:
+            return JSONResponse(
+                content={"detail": "Please login first", "timestamp": utc_time},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
 
+        request.state.user = jwt_user
         return await call_next(request)
+

@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from money_saver_app.application.money_saver_application import MoneySaverController
+from money_saver_app.application.money_saver_application_config import ApplicationMode
 from money_saver_app.controller.fastapi.auth_controller import AuthController
 from money_saver_app.controller.fastapi.middlewares.auth_middleware import (
     AuthMiddleware,
@@ -49,10 +50,13 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
 
         self.register_middlewares()
 
+
     def register_middlewares(self) -> None:
+
+        exclueded_routes = ["/api/public", "/openapi.json", "/docs"]
         middlewares = [
             ExceptionMiddleware(),
-            AuthMiddleware(self.auth_service, ["/api/public"]),
+            AuthMiddleware(self.auth_service, exclueded_routes),
         ]
         for middleware in middlewares:
             self.app.middleware("http")(middleware)

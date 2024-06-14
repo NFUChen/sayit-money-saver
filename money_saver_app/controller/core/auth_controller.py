@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from openai import BaseModel
 
-from money_saver_app.controller.fastapi.route_controller import RouterController
+from money_saver_app.controller.core.route_controller import RouterController
 from money_saver_app.repository.models import User
 from money_saver_app.service.money_saver.auth_service import AuthService
 from money_saver_app.service.money_saver.user_service import Guest, UserService
@@ -85,6 +85,6 @@ class AuthController(RouterController):
         optional_jwt = request.cookies.get(self.COOKIE_NAME)
         if optional_jwt is None:
             return False
-        optional_user = self.auth_service.get_user_from_jwt(optional_jwt)
+        optional_user = self.auth_service.get_jwt_user_from_jwt(optional_jwt)
         logger.info(f"[JWT USER FOUND] User: {optional_user}")
         return optional_user is not None
