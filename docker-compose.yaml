@@ -1,0 +1,10 @@
+version: '3.4'
+services:
+  voice-money-saver:
+    privileged: true
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: always
+    ports:
+      - 8080:8080
