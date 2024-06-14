@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -11,7 +11,10 @@ class PipelineContext(BaseModel):
     ...
 
 
-class PipelineStep(ABC):
+C = TypeVar("C", bound=PipelineContext)
+
+
+class PipelineStep(ABC, Generic[C]):
     """
     Defines the base class for a pipeline step in the application's data processing pipeline.
 
@@ -20,7 +23,7 @@ class PipelineStep(ABC):
     a specific data processing task within the overall pipeline.
     """
 
-    def __init__(self, context: PipelineContext) -> None: ...
+    def __init__(self, context: C) -> None: ...
 
     def execute(self) -> None:
         """

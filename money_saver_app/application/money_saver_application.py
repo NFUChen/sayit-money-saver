@@ -13,7 +13,6 @@ from money_saver_app.application.money_saver_application_config import (
 from money_saver_app.repository.recorder_repository import (
     TransactionRepository,
     UserRepository,
-    UserTokenRepository,
 )
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
 from money_saver_app.service.money_saver.auth_service import AuthService
@@ -65,7 +64,6 @@ class MoneySaverApplication:
 
         engine = SQLCrudRepository.create_all_tables(app_config.sql_url)
         self.user_repo = UserRepository(engine)
-        self.user_token_repo = UserTokenRepository()
 
         self.user_service = UserService(self.user_repo, self.password_context)
         self.auth_service = AuthService(
@@ -79,16 +77,18 @@ class MoneySaverApplication:
 
         match self.app_config.mode:
             case ApplicationMode.PRODUCTION:
-                self.pipeline_factory = VoiceProductionPipelineFactory(
-                    self.user_service,
-                    self.transaction_service,
-                    self.llm,
-                    self.voice_recognizer,
-                )
+                self.pipeline_factory = VoiceProductionPipelineFactory()
             case ApplicationMode.DEVELOPMENT:
                 self.pipeline_factory = VoiceDevelopmentPipelineFactory()
 
-        self.money_saver_service = MoneySaverService(engine, self.pipeline_factory)
+        self.money_saver_service = MoneySaverService(
+            engine,
+            self.pipeline_factory,
+            self.user_service,
+            self.transaction_service,
+            self.llm,
+            self.voice_recognizer,
+        )
 
         self._handle_logger()
 

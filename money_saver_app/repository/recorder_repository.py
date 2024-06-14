@@ -18,11 +18,3 @@ class TransactionRepository(SQLCrudRepository[int, Transaction]): ...
 
 
 class TransactionItemRepository(SQLCrudRepository[int, TransactionItem]): ...
-
-
-class UserTokenRepository:
-    def __init__(self) -> None:
-        pass
-
-    def get_uesr_id_by_token(self, token: str) -> Optional[int]:
-        return 0

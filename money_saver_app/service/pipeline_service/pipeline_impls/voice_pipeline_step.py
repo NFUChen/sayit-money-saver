@@ -31,13 +31,19 @@ class VoicePipelineContext(PipelineContext):
     user_id: int
     voice_bytes: bytes = Field(exclude=True)
     session: Session = Field(exclude=True)
+    voice_recognizer: VoiceRecognizer = Field(exclude=True)
+    llm: LargeLanguageModelBase = Field(exclude=True)
+    transaction_service: TransactionService = Field(exclude=True)
 
     view: Optional[TransactionView] = None
     transcribed_text: Optional[str] = None
     is_saved: bool = False
 
 
-class StepVoiceParsing(PipelineStep):
+class VoicePipelineStep(PipelineStep[VoicePipelineContext]): ...
+
+
+class StepVoiceParsing(VoicePipelineStep):
     """
     Represents a pipeline step that parses voice data and transcribes it to text.
 
@@ -52,11 +58,9 @@ class StepVoiceParsing(PipelineStep):
         None
     """
 
-    def __init__(
-        self, context: VoicePipelineContext, voice_recognizer: VoiceRecognizer
-    ) -> None:
+    def __init__(self, context: VoicePipelineContext) -> None:
         self.context = context
-        self.voice_recognizer = voice_recognizer
+        self.voice_recognizer = context.voice_recognizer
 
     def execute(self) -> None:
         voice_bytes = self.context.voice_bytes
@@ -64,40 +68,36 @@ class StepVoiceParsing(PipelineStep):
         self.context.transcribed_text = text
 
 
-class StepTextToTransactionView(PipelineStep):
+class StepTextToTransactionView(VoicePipelineStep):
     """
-    Represents a pipeline step that converts the transcribed voice data into a transaction view.
-
-    This step takes the transcribed text from the `VoicePipelineContext` and uses a `LargeLanguageModelBase` to generate a `TransactionView` object.
-    The generated `TransactionView` is then stored in the `VoicePipelineContext` for use in subsequent pipeline steps.
-
+    Represents a pipeline step that generates a transaction view from the transcribed voice data.
+    
+    This step takes the transcribed text from the `VoicePipelineContext` and uses a large language model (LLM) to generate a `TransactionView` object. The generated `TransactionView` is then stored in the `VoicePipelineContext` for use in subsequent pipeline steps.
+    
     Args:
         context (VoicePipelineContext): The context for the voice pipeline step.
-        model_llm (LargeLanguageModelBase): The large language model to use for generating the transaction view.
-
+        llm (LargeLanguageModelBase): The large language model to use for generating the transaction view.
     Raises:
-        None
+        OptionalTextMissingError: If the transcribed text is not available in the context.
+        TransactionViewNotFoundError: If the LLM fails to generate a valid transaction view.
     """
-
-    def __init__(
-        self, context: VoicePipelineContext, model_llm: LargeLanguageModelBase
-    ) -> None:
+    def __init__(self, context: VoicePipelineContext) -> None:
         self.context = context
-        self.model_llm = model_llm
+        self.llm = context.llm
 
     def execute(self) -> None:
         optional_text = self.context.transcribed_text
         if optional_text is None:
             raise OptionalTextMissingError()
 
-        optional_view = TransactionView.model_ask(optional_text, self.model_llm)
+        optional_view = TransactionView.model_ask(optional_text, self.llm)
         if optional_view is None:
             raise TransactionViewNotFoundError(optional_text)
 
         self.context.view = optional_view
 
 
-class StepTransactionVivePersistence(PipelineStep):
+class StepTransactionVivePersistence(VoicePipelineStep):
     """
     Represents a pipeline step that persists the transaction view generated from the transcribed voice data.
 
@@ -112,11 +112,9 @@ class StepTransactionVivePersistence(PipelineStep):
         None
     """
 
-    def __init__(
-        self, context: VoicePipelineContext, transaction_service: TransactionService
-    ) -> None:
+    def __init__(self, context: VoicePipelineContext) -> None:
         self.context = context
-        self.transaction_service = transaction_service
+        self.transaction_service = context.transaction_service
 
     def execute(self) -> None:
         optional_view = self.context.view
