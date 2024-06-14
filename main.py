@@ -4,7 +4,7 @@ from money_saver_app.application.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
 )
-from money_saver_app.controller.fastapi.voice_money_saver_web_controller import (
+from money_saver_app.controller.core.voice_money_saver_web_controller import (
     VoiceMoneySaverWebController,
 )
 

@@ -7,15 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from money_saver_app.application.money_saver_application import MoneySaverController
 from money_saver_app.application.money_saver_application_config import ApplicationMode
-from money_saver_app.controller.fastapi.auth_controller import AuthController
-from money_saver_app.controller.fastapi.middlewares.auth_middleware import (
+from money_saver_app.controller.core.auth_controller import AuthController
+from money_saver_app.controller.core.middlewares.auth_middleware import (
     AuthMiddleware,
 )
-from money_saver_app.controller.fastapi.middlewares.exception_middleware import (
+from money_saver_app.controller.core.middlewares.exception_middleware import (
     ExceptionMiddleware,
 )
-from money_saver_app.controller.fastapi.route_controller import RouterController
-from money_saver_app.controller.fastapi.user_controller import UesrController
+from money_saver_app.controller.core.route_controller import RouterController
+from money_saver_app.controller.core.user_controller import UesrController
 
 
 @dataclass
