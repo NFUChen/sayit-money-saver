@@ -71,9 +71,9 @@ class StepVoiceParsing(VoicePipelineStep):
 class StepTextToTransactionView(VoicePipelineStep):
     """
     Represents a pipeline step that generates a transaction view from the transcribed voice data.
-    
+
     This step takes the transcribed text from the `VoicePipelineContext` and uses a large language model (LLM) to generate a `TransactionView` object. The generated `TransactionView` is then stored in the `VoicePipelineContext` for use in subsequent pipeline steps.
-    
+
     Args:
         context (VoicePipelineContext): The context for the voice pipeline step.
         llm (LargeLanguageModelBase): The large language model to use for generating the transaction view.
@@ -81,6 +81,7 @@ class StepTextToTransactionView(VoicePipelineStep):
         OptionalTextMissingError: If the transcribed text is not available in the context.
         TransactionViewNotFoundError: If the LLM fails to generate a valid transaction view.
     """
+
     def __init__(self, context: VoicePipelineContext) -> None:
         self.context = context
         self.llm = context.llm

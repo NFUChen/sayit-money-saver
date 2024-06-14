@@ -7,6 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from money_saver_app.application.money_saver_application import MoneySaverController
 from money_saver_app.controller.fastapi.auth_controller import AuthController
+from money_saver_app.controller.fastapi.middlewares.auth_middleware import (
+    AuthMiddleware,
+)
 from money_saver_app.controller.fastapi.middlewares.exception_middleware import (
     ExceptionMiddleware,
 )
@@ -44,7 +47,11 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
             allow_headers=["*"],
         )
 
+        self.register_middlewares()
+
+    def register_middlewares(self) -> None:
         self.app.middleware("http")(ExceptionMiddleware())
+        self.app.middleware("http")(AuthMiddleware(self.auth_service, ["/api/public"]))
 
     def register_routes(self) -> None:
         @self.app.get("/")
@@ -52,8 +59,8 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
             return {"message": "Welcome to Money Saver API"}
 
         self.route_controllers: Iterable[RouterController] = [
-            UesrController("/api/admin", self.user_service),
-            AuthController("/api/auth", self.auth_service),
+            AuthController("/api/public/auth", self.auth_service),
+            UesrController("/api/private/admin", self.user_service),
         ]
 
         for controller in self.route_controllers:

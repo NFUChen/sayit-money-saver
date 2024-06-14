@@ -7,7 +7,6 @@ from openai import BaseModel
 
 from money_saver_app.controller.fastapi.route_controller import RouterController
 from money_saver_app.service.money_saver.auth_service import AuthService
-from money_saver_app.service.money_saver.error_code import PasswordNotMatchError
 
 
 class CredentialContext(BaseModel):
