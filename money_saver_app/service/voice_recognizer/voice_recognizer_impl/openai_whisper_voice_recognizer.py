@@ -14,7 +14,7 @@ class OpenAIWhisperConfig(TypedDict):
     model_name: str
 
 
-class OpenAIWhiswerVoiceRecognizer(VoiceRecognizer):
+class OpenAIWhisperVoiceRecognizer(VoiceRecognizer):
     def __init__(self, model_config: OpenAIWhisperConfig) -> None:
         self.model = whisper.load_model(model_config["model_name"])
 

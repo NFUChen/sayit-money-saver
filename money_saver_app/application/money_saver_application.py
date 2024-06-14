@@ -24,7 +24,7 @@ from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory im
     VoiceProductionPipelineFactory,
 )
 from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisper_voice_recognizer import (
-    OpenAIWhiswerVoiceRecognizer,
+    OpenAIWhisperVoiceRecognizer,
 )
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModel
@@ -58,7 +58,7 @@ class MoneySaverApplication:
 
         self.password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-        self.voice_recognizer = OpenAIWhiswerVoiceRecognizer(
+        self.voice_recognizer = OpenAIWhisperVoiceRecognizer(
             app_config.openai_whisper_config
         )
 
