@@ -55,6 +55,10 @@ class LanguageResource:
         "en": "The email has been registered.",
         "chi": "該電子郵件已經被註冊",
     }
+    TRASACTION_PARSER_ERROR: LanguageDict = {
+        "en": "Unable to parse transaction, please try it again...",
+        "chi": "未能成功解析交易紀錄, 請重新嘗試...",
+    }
 
 
 class ErrorCodeWithError(Exception):
@@ -92,7 +96,7 @@ class ErrorCodeWithError(Exception):
 
 
 class OptionalTextMissingError(ErrorCodeWithError):
-    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    ERROR_CODE: int = status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def __init__(self) -> None:
         super().__init__(
@@ -101,12 +105,23 @@ class OptionalTextMissingError(ErrorCodeWithError):
 
 
 class TransactionViewNotFoundError(ErrorCodeWithError):
-    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    ERROR_CODE: int = status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def __init__(self, text: str = "") -> None:
         super().__init__(
             self.ERROR_CODE,
             "Transaction view not found for the given text.",
+            source=text,
+        )
+
+
+class UnableToParseViewRequestError(ErrorCodeWithError):
+    ERROR_CODE: int = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def __init__(self, text: str = "") -> None:
+        super().__init__(
+            self.ERROR_CODE,
+            LanguageResource.TRASACTION_PARSER_ERROR[self.LANGUAGE],
             source=text,
         )
 

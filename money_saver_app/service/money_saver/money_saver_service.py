@@ -4,9 +4,11 @@ from sqlmodel import Session
 from money_saver_app.service.money_saver.transaction_service import TransactionService
 from money_saver_app.service.money_saver.user_service import UserService
 from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory import (
+    TextPipelineFactory,
     VoicePipelineFactory,
 )
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
+    MoneySaverPipelineContext,
     VoicePipelineContext,
 )
 from money_saver_app.service.voice_recognizer.voice_recognizer import VoiceRecognizer
@@ -25,19 +27,23 @@ class MoneySaverService:
         self,
         engine: Engine,
         voice_pipeline_factory: VoicePipelineFactory,
+        text_pipeline_factory: TextPipelineFactory,
         user_service: UserService,
         transaction_service: TransactionService,
         model_llm: LargeLanguageModelBase,
         voice_recognizer: VoiceRecognizer,
     ) -> None:
         self.engine = engine
-        self.factory = voice_pipeline_factory
+        self.voice_pipeline_factory = voice_pipeline_factory
+        self.text_pipeline_factory = text_pipeline_factory
         self.user_service = user_service
         self.transaction_service = transaction_service
         self.llm = model_llm
         self.voice_recognizer = voice_recognizer
 
-    def execute_pipeline(self, voice_bytes: bytes, user_id: int) -> bool:
+    def execute_voice_pipeline(
+        self, voice_bytes: bytes, user_id: int
+    ) -> VoicePipelineContext:
         with Session(self.engine) as session:
             context = VoicePipelineContext(
                 voice_bytes=voice_bytes,
@@ -47,8 +53,23 @@ class MoneySaverService:
                 transaction_service=self.transaction_service,
                 llm=self.llm,
             )
-            steps = self.factory.create_pipeline(context)
+            steps = self.voice_pipeline_factory.create_pipeline(context)
             for step in steps:
                 step.execute()
+        return context
 
-        return True
+    def execute_text_pipeline(
+        self, source_text: str, user_id: int
+    ) -> MoneySaverPipelineContext:
+        with Session(self.engine) as session:
+            context = MoneySaverPipelineContext(
+                session=session,
+                user_id=user_id,
+                transaction_service=self.transaction_service,
+                llm=self.llm,
+                source_text=source_text,
+            )
+            steps = self.text_pipeline_factory.create_pipeline(context)
+            for step in steps:
+                step.execute()
+        return context

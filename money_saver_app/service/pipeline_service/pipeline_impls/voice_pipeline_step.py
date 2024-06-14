@@ -6,6 +6,7 @@ from sqlmodel import Session
 from money_saver_app.service.money_saver.error_code import (
     OptionalTextMissingError,
     TransactionViewNotFoundError,
+    UnableToParseViewRequestError,
 )
 from money_saver_app.service.money_saver.transaction_service import TransactionService
 from money_saver_app.service.money_saver.views import TransactionView
@@ -17,7 +18,21 @@ from money_saver_app.service.voice_recognizer.voice_recognizer import VoiceRecog
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 
 
-class VoicePipelineContext(PipelineContext):
+class MoneySaverPipelineContext(PipelineContext):
+    """
+    Represents the base context for a pipeline step in the money saver application.
+    """
+
+    user_id: int
+    session: Session = Field(exclude=True)
+    llm: LargeLanguageModelBase = Field(exclude=True)
+    transaction_service: TransactionService = Field(exclude=True)
+    view: Optional[TransactionView] = None
+    is_saved: bool = False
+    source_text: Optional[str] = None
+
+
+class VoicePipelineContext(MoneySaverPipelineContext):
     """
     Represents the context for a voice pipeline step in the money saver application.
 
@@ -25,25 +40,14 @@ class VoicePipelineContext(PipelineContext):
         voice_bytes (bytes): The bytes of the voice data.
         session (Session): The SQLModel session for the database.
         user_id (Optional[int]): The optional user ID associated with the voice data.
-        transcribed_text (Optional[str]): The optional transcribed text from the voice data.
+        source_text (Optional[str]): The optional transcribed text from the voice data.
     """
 
-    user_id: int
     voice_bytes: bytes = Field(exclude=True)
-    session: Session = Field(exclude=True)
     voice_recognizer: VoiceRecognizer = Field(exclude=True)
-    llm: LargeLanguageModelBase = Field(exclude=True)
-    transaction_service: TransactionService = Field(exclude=True)
-
-    view: Optional[TransactionView] = None
-    transcribed_text: Optional[str] = None
-    is_saved: bool = False
 
 
-class VoicePipelineStep(PipelineStep[VoicePipelineContext]): ...
-
-
-class StepVoiceParsing(VoicePipelineStep):
+class StepVoiceParsing(PipelineStep[VoicePipelineContext]):
     """
     Represents a pipeline step that parses voice data and transcribes it to text.
 
@@ -65,10 +69,10 @@ class StepVoiceParsing(VoicePipelineStep):
     def execute(self) -> None:
         voice_bytes = self.context.voice_bytes
         text = self.voice_recognizer.recognize(voice_bytes)
-        self.context.transcribed_text = text
+        self.context.source_text = text
 
 
-class StepTextToTransactionView(VoicePipelineStep):
+class StepTextToTransactionView(PipelineStep[MoneySaverPipelineContext]):
     """
     Represents a pipeline step that generates a transaction view from the transcribed voice data.
 
@@ -82,23 +86,23 @@ class StepTextToTransactionView(VoicePipelineStep):
         TransactionViewNotFoundError: If the LLM fails to generate a valid transaction view.
     """
 
-    def __init__(self, context: VoicePipelineContext) -> None:
+    def __init__(self, context: MoneySaverPipelineContext) -> None:
         self.context = context
         self.llm = context.llm
 
     def execute(self) -> None:
-        optional_text = self.context.transcribed_text
+        optional_text = self.context.source_text
         if optional_text is None:
             raise OptionalTextMissingError()
 
         optional_view = TransactionView.model_ask(optional_text, self.llm)
         if optional_view is None:
-            raise TransactionViewNotFoundError(optional_text)
+            raise UnableToParseViewRequestError(optional_text)
 
         self.context.view = optional_view
 
 
-class StepTransactionVivePersistence(VoicePipelineStep):
+class StepTransactionVivePersistence(PipelineStep[MoneySaverPipelineContext]):
     """
     Represents a pipeline step that persists the transaction view generated from the transcribed voice data.
 
@@ -113,7 +117,7 @@ class StepTransactionVivePersistence(VoicePipelineStep):
         None
     """
 
-    def __init__(self, context: VoicePipelineContext) -> None:
+    def __init__(self, context: MoneySaverPipelineContext) -> None:
         self.context = context
         self.transaction_service = context.transaction_service
 
@@ -122,8 +126,6 @@ class StepTransactionVivePersistence(VoicePipelineStep):
         if optional_view is None:
             raise TransactionViewNotFoundError()
 
-        is_saved = self.transaction_service.save_transaction_view(
-            cast(int, self.context.user_id), optional_view
-        )
+        is_saved = self.transaction_service.save_transaction_view(self.context.user_id, optional_view)
 
         self.context.is_saved = is_saved

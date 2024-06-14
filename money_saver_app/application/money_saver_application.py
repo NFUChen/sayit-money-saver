@@ -20,8 +20,9 @@ from money_saver_app.service.money_saver.money_saver_service import MoneySaverSe
 from money_saver_app.service.money_saver.transaction_service import TransactionService
 from money_saver_app.service.money_saver.user_service import UserService
 from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory import (
+    TextPipelineFactory,
     VoiceDevelopmentPipelineFactory,
-    VoiceProductionPipelineFactory,
+    VoicePipelineFactory,
 )
 from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisper_voice_recognizer import (
     OpenAIWhisperVoiceRecognizer,
@@ -56,6 +57,7 @@ class MoneySaverApplication:
         self.app_config = app_config
 
         self.llm = self._get_language_model(app_config.base_config)
+        logger.info(f"[MODEL SELECTION] Select LLM: {self.llm.get_model_name()}")
 
         self.password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -78,13 +80,15 @@ class MoneySaverApplication:
 
         match self.app_config.mode:
             case ApplicationMode.PRODUCTION:
-                self.pipeline_factory = VoiceProductionPipelineFactory()
+                self.voice_pipeline_factory = VoicePipelineFactory()
+                self.text_pipeline_factory = TextPipelineFactory()
             case ApplicationMode.DEVELOPMENT:
                 self.pipeline_factory = VoiceDevelopmentPipelineFactory()
 
         self.money_saver_service = MoneySaverService(
             engine,
-            self.pipeline_factory,
+            self.voice_pipeline_factory,
+            self.text_pipeline_factory,
             self.user_service,
             self.transaction_service,
             self.llm,
@@ -102,9 +106,9 @@ class MoneySaverApplication:
         if "ollama_config" not in base_config and "openai_config" not in base_config:
             raise ValueError("No language model config provided")
 
-        ollma_config = base_config.get("ollama_config")
-        if ollma_config is not None:
-            return OllamaModel(ollma_config)
+        # ollma_config = base_config.get("ollama_config")
+        # if ollma_config is not None:
+        #     return OllamaModel(ollma_config)
 
         openai_config = base_config.get("openai_config")
         if openai_config is not None:
@@ -115,7 +119,7 @@ class MoneySaverApplication:
     def run_controller(self, controller_cls: Type[MoneySaverController]) -> None:
         controller_cls(
             self.app_config,
-            self.user_service, 
-            self.auth_service, 
+            self.user_service,
+            self.auth_service,
             self.money_saver_service,
         ).run()

@@ -1,13 +1,15 @@
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Annotated, Iterable
 
+from loguru import logger
+from pydantic import BaseModel
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, File
 from fastapi.middleware.cors import CORSMiddleware
 
 from money_saver_app.application.money_saver_application import MoneySaverController
-from money_saver_app.application.money_saver_application_config import ApplicationMode
 from money_saver_app.controller.core.auth_controller import AuthController
+from money_saver_app.controller.core.depends_utils import get_current_user_id
 from money_saver_app.controller.core.middlewares.auth_middleware import (
     AuthMiddleware,
 )
@@ -16,6 +18,14 @@ from money_saver_app.controller.core.middlewares.exception_middleware import (
 )
 from money_saver_app.controller.core.route_controller import RouterController
 from money_saver_app.controller.core.user_controller import UesrController
+from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
+    MoneySaverPipelineContext,
+    VoicePipelineContext,
+)
+
+
+class TextPipelineRequest(BaseModel):
+    source_text: str
 
 
 @dataclass
@@ -50,9 +60,7 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
 
         self.register_middlewares()
 
-
     def register_middlewares(self) -> None:
-
         exclueded_routes = ["/api/public", "/openapi.json", "/docs"]
         middlewares = [
             ExceptionMiddleware(),
@@ -65,6 +73,30 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
         @self.app.get("/")
         def read_root():
             return {"message": "Welcome to Money Saver API"}
+
+        @self.app.post("/api/save-record-from-audio")
+        def save_record_from_audio(
+            audio_file: Annotated[bytes, File()],
+            current_user_id: int = Depends(get_current_user_id),
+        ) -> VoicePipelineContext:
+            logger.info(f"[PIPELINE EXECUTION] User ID: {current_user_id}")
+            context = self.money_saver_service.execute_voice_pipeline(
+                audio_file, current_user_id
+            )
+            logger.info(f"[PIPELINE FINAL CONTEXT] Context: {context.model_dump()}")
+            return context
+
+        @self.app.post("/api/save-record-from-text")
+        def save_record_from_text(
+            text_pipeline_context: TextPipelineRequest,
+            current_user_id: int = Depends(get_current_user_id),
+        ) -> MoneySaverPipelineContext:
+            logger.info(f"[PIPELINE EXECUTION] User ID: {current_user_id}")
+            context = self.money_saver_service.execute_text_pipeline(
+                text_pipeline_context.source_text, current_user_id
+            )
+            logger.info(f"[PIPELINE FINAL CONTEXT] Context: {context.model_dump()}")
+            return context
 
         self.route_controllers: Iterable[RouterController] = [
             AuthController("/api/public/auth", self.auth_service, self.user_service),

@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Iterable
 
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
+    MoneySaverPipelineContext,
     StepTextToTransactionView,
     StepTransactionVivePersistence,
     StepVoiceParsing,
@@ -18,10 +19,7 @@ class PipelineFactory:
     def create_pipeline(self, context: PipelineContext) -> Iterable[PipelineStep]: ...
 
 
-class VoicePipelineFactory(PipelineFactory): ...
-
-
-class VoiceProductionPipelineFactory(VoicePipelineFactory):
+class VoicePipelineFactory(PipelineFactory):
     def create_pipeline(self, context: VoicePipelineContext) -> Iterable[PipelineStep]:
         return [
             StepVoiceParsing(context),
@@ -30,6 +28,16 @@ class VoiceProductionPipelineFactory(VoicePipelineFactory):
         ]
 
 
-class VoiceDevelopmentPipelineFactory(VoicePipelineFactory):
+class TextPipelineFactory(PipelineFactory):
+    def create_pipeline(
+        self, context: MoneySaverPipelineContext
+    ) -> Iterable[PipelineStep]:
+        return [
+            StepTextToTransactionView(context),
+            StepTransactionVivePersistence(context),
+        ]
+
+
+class VoiceDevelopmentPipelineFactory(PipelineFactory):
     def create_pipeline(self, context: PipelineContext) -> Iterable[PipelineStep]:
         return []

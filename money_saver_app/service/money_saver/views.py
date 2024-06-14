@@ -41,13 +41,13 @@ class TransactionView(SmartBaseModel["TransactionView"]):
     Note:
      - This model is used within the context of a money saver app, where most transactions are categorized as expenses （成本, 費用）.
      - However, there are exceptions for revenue transactions, such as bank savings (銀行儲蓄、個人儲蓄、銀行存款、個人存款、活期、活期儲蓄存) and personal savings etc.
-
+     - Most of the user of this app is Chinese, so model up the object with value being Traditional Chinese
     注意：
         此模型在記帳軟體的基礎下使用，其中大多數交易（成本, 費用）被分類為支出 (Expense)。
         但也有交易列為收入的情況，例如銀行儲蓄、個人儲蓄、銀行存款、個人存款、活期、活期儲蓄存款等、此類狀況下請歸類為 收入 (Revenue)。
-        絕大部分使用者為中文使用者, 請使用『繁體中文』回答
+        絕大部分軟體使用者為中文使用者, 請使用『繁體中文』建立此物件
     """
 
     transaction_type: TransactionType
-    amount: int = Field(gt=0)
+    amount: int = Field(gt=0, default=0)
     item: TransactionItemView

@@ -63,13 +63,12 @@ class AuthService:
             user_id = jwt_user["id"]
             optional_user = self.user_service.get_user_by_id(user_id)
             if optional_user is None:
-                raise UserNotFoundError(user_id= user_id)
+                raise UserNotFoundError(user_id=user_id)
 
         except jwt.exceptions.InvalidTokenError as invalid_token_error:
             logger.exception(invalid_token_error)
             return
-        
-        
+
         return jwt_user
 
     def __is_verified_password(self, raw_password: str, hashed_password: str) -> bool:
