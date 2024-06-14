@@ -1,10 +1,11 @@
 from typing import Iterable, Optional
 
+from loguru import logger
 from openai import BaseModel
+from passlib.context import CryptContext
 
 from money_saver_app.repository.models import User
 from money_saver_app.repository.recorder_repository import UserRepository
-from passlib.context import CryptContext
 
 
 class Guest(BaseModel):
@@ -48,6 +49,7 @@ class UserService:
             is_active=False,
         )
         saved_user = self.user_repo.save(user)
+        logger.info(f"[NEW USER] New user registered: {saved_user.user_name}")
 
         return saved_user
 
@@ -59,6 +61,9 @@ class UserService:
 
     def get_user_by_user_name(self, user_name: str) -> Optional[User]:
         return self.user_repo.find_user_by_user_name(user_name)
+
+    def get_user_by_id(self, id: int) -> Optional[User]:
+        return self.user_repo.find_by_id(id)
 
     def get_all_users(self) -> Iterable[User]:
         return self.user_repo.find_all()

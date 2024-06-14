@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from typing import Type
 
 from loguru import logger
+from passlib.context import CryptContext
 
-from application.application_config import BaseApplicationConifig
-from money_saver_app.applicaion.money_saver_application_config import (
+from application.application_config import BaseApplicationConfig
+from money_saver_app.application.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
 )
@@ -18,7 +19,7 @@ from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
 from money_saver_app.service.money_saver.auth_service import AuthService
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.transaction_service import TransactionService
-from money_saver_app.service.money_saver.uesr_service import UserService
+from money_saver_app.service.money_saver.user_service import UserService
 from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory import (
     VoiceDevelopmentPipelineFactory,
     VoiceProductionPipelineFactory,
@@ -30,12 +31,11 @@ from smart_base_model.llm.large_language_model_base import LargeLanguageModelBas
 from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaModel
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModel
 
-from passlib.context import CryptContext
-
 
 @dataclass
 class MoneySaverController(ABC):
     user_service: UserService
+    auth_service: AuthService
     money_saver_service: MoneySaverService
 
     def run(self) -> None: ...
@@ -96,7 +96,7 @@ class MoneySaverApplication:
         logger.add("./log/server.log", rotation="1 day", retention="1 month")
 
     def _get_language_model(
-        self, base_config: BaseApplicationConifig
+        self, base_config: BaseApplicationConfig
     ) -> LargeLanguageModelBase:
         if "ollama_config" not in base_config and "openai_config" not in base_config:
             raise ValueError("No language model config provided")
@@ -112,4 +112,6 @@ class MoneySaverApplication:
         raise Exception("[NO MODEL CONFIG PROVIDED] Failed to create language model")
 
     def run_controller(self, controller_cls: Type[MoneySaverController]) -> None:
-        controller_cls(self.user_service, self.money_saver_service).run()
+        controller_cls(
+            self.user_service, self.auth_service, self.money_saver_service
+        ).run()

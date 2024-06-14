@@ -1,15 +1,17 @@
 import copy
 from datetime import datetime, timedelta, timezone
 from typing import Optional, TypedDict
+
+import jwt
+from loguru import logger
 from passlib.context import CryptContext
 
 from money_saver_app.repository.models import User
 from money_saver_app.service.money_saver.error_code import (
-    InvalidCredentialError,
+    PasswordNotMatchError,
     UserNotFoundError,
 )
-from money_saver_app.service.money_saver.uesr_service import UserService
-import jwt
+from money_saver_app.service.money_saver.user_service import UserService
 
 
 class JwtConfig(TypedDict):
@@ -18,6 +20,10 @@ class JwtConfig(TypedDict):
 
 
 JsonWebToken = str
+
+
+class JWTUser(TypedDict):
+    id: int
 
 
 class AuthService:
@@ -40,8 +46,30 @@ class AuthService:
         self.jwt_config = jwt_config
         self.user_service = user_service
         self.password_context = password_context
+        self.secret_key = self.jwt_config["secret_key"]
+        self.jwt_algorithm = "HS256"
 
-    def is_verified_password(self, raw_password: str, hashed_password: str) -> bool:
+    def get_user_from_jwt(self, token: str) -> Optional[User]:
+        """
+        Validates a JSON Web Token (JWT) by decoding it using the configured secret key and algorithm.
+
+        Args:
+            token (str): The JWT token to validate.
+        """
+        try:
+            jwt_user: JWTUser = jwt.decode(
+                token, self.secret_key, algorithms=[self.jwt_algorithm]
+            )
+            user_id = jwt_user["id"]
+            optional_user = self.user_service.get_user_by_id(user_id)
+
+        except jwt.exceptions.InvalidTokenError as invalid_token_error:
+            logger.exception(invalid_token_error)
+            return
+
+        return optional_user
+
+    def __is_verified_password(self, raw_password: str, hashed_password: str) -> bool:
         return self.password_context.verify(raw_password, hashed_password)
 
     def __get_payload_jwt(self, payload: dict) -> JsonWebToken:
@@ -50,9 +78,7 @@ class AuthService:
             minutes=self.jwt_config["access_token_expire_minutes"]
         )
         payload_copy.update({"exp": expire})
-        return jwt.encode(
-            payload_copy, self.jwt_config["secret_key"], algorithm="HS256"
-        )
+        return jwt.encode(payload_copy, self.secret_key, algorithm=self.jwt_algorithm)
 
     def __user_login_base_func(
         self, optiona_user: Optional[User], input_password: str
@@ -60,11 +86,11 @@ class AuthService:
         if optiona_user is None:
             raise UserNotFoundError()
 
-        is_verfied = self.is_verified_password(
+        is_verfied = self.__is_verified_password(
             input_password, optiona_user.hashed_password
         )
         if not is_verfied:
-            raise InvalidCredentialError()
+            raise PasswordNotMatchError()
         return self.__get_payload_jwt(optiona_user.model_dump())
 
     def user_login_by_user_name(

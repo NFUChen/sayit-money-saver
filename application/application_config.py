@@ -6,6 +6,6 @@ from smart_base_model.llm.llm_impls.ollama_large_language_model import OllamaMod
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModelConfig
 
 
-class BaseApplicationConifig(TypedDict):
+class BaseApplicationConfig(TypedDict):
     openai_config: NotRequired[OpenAIModelConfig]
     ollama_config: NotRequired[OllamaModelConfig]

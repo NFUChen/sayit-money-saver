@@ -1,5 +1,7 @@
 from typing import Literal, Optional, TypedDict
 
+from fastapi import status
+
 
 class LanguageDict(TypedDict):
     """
@@ -38,7 +40,7 @@ class LanguageResource:
         "chi": "Transaction view not found for the given optional text and model. Source: {source}",
     }
 
-    INVALID_CREDENTIALS: LanguageDict = {
+    PASSWORD_NOT_MATCH: LanguageDict = {
         "en": "The password does not match",
         "chi": "使用者密碼錯誤",
     }
@@ -75,9 +77,7 @@ class ErrorCodeWithError(Exception):
         self.error_kwargs = kwargs
 
     def __str__(self) -> str:
-        return (
-            f"[{self.ERROR_CODE}] {self.message_template.format(**self.error_kwargs)}"
-        )
+        return self.message_template.format(**self.error_kwargs)
 
 
 class UserNotFoundError(ErrorCodeWithError):
@@ -94,17 +94,17 @@ class UserNotFoundError(ErrorCodeWithError):
         )
 
 
-class InvalidCredentialError(ErrorCodeWithError):
-    ERROR_CODE = 401
+class PasswordNotMatchError(ErrorCodeWithError):
+    ERROR_CODE = status.HTTP_401_UNAUTHORIZED
 
     def __init__(self) -> None:
         super().__init__(
-            self.ERROR_CODE, LanguageResource.INVALID_CREDENTIALS[self.LANGUAGE]
+            self.ERROR_CODE, LanguageResource.PASSWORD_NOT_MATCH[self.LANGUAGE]
         )
 
 
 class OptionalTextMissingError(ErrorCodeWithError):
-    ERROR_CODE: int = 400
+    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     def __init__(self) -> None:
         super().__init__(
@@ -114,7 +114,7 @@ class OptionalTextMissingError(ErrorCodeWithError):
 
 class TransactionViewNotFoundError(ErrorCodeWithError):
     LANGUAGE: Literal["chi", "en"] = "en"
-    ERROR_CODE: int = 404
+    ERROR_CODE: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     def __init__(self, text: str = "") -> None:
         super().__init__(

@@ -13,8 +13,8 @@ from uuid import UUID
 
 from loguru import logger
 from sqlalchemy import Engine, Select, create_engine
-from sqlmodel.sql.expression import SelectOfScalar, Select
 from sqlmodel import Session, SQLModel, select
+from sqlmodel.sql.expression import Select, SelectOfScalar
 
 T = TypeVar("T", bound=SQLModel)
 ID = TypeVar("ID", UUID, int)

@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -23,12 +24,9 @@ class PipelineStep(ABC):
 
     def execute(self) -> None:
         """
-        Executes the pipeline step, processing the data in the provided pipeline context.
+        Executes the data processing task defined by the concrete pipeline step implementation.
 
-        Args:
-            context (PipelineContext): The pipeline context containing the data to be processed.
-
-        Returns:
-            PipelineContext: The updated pipeline context after the step has been executed.
+        This method should contain the core logic for the pipeline step, validating the pipeline context
+        and performing the necessary data processing operations.
         """
         ...

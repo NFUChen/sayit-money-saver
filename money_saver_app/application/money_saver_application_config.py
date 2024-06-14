@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from application.application_config import BaseApplicationConifig
+from application.application_config import BaseApplicationConfig
 from money_saver_app.service.money_saver.auth_service import JwtConfig
 from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisper_voice_recognizer import (
     OpenAIWhisperConfig,
@@ -15,7 +15,7 @@ class ApplicationMode(Enum):
 
 @dataclass
 class MoneySaverApplicationConfig:
-    base_config: BaseApplicationConifig
+    base_config: BaseApplicationConfig
     sql_url: str
     mode: ApplicationMode
     openai_whisper_config: OpenAIWhisperConfig

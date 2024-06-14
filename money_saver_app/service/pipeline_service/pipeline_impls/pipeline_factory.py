@@ -2,10 +2,10 @@ from abc import abstractmethod
 from typing import Iterable
 
 from money_saver_app.service.money_saver.transaction_service import TransactionService
-from money_saver_app.service.money_saver.uesr_service import UserService
+from money_saver_app.service.money_saver.user_service import UserService
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
     StepTextToTransactionView,
-    StepTransactionVivePersitence,
+    StepTransactionVivePersistence,
     StepVoiceParsing,
     VoicePipelineContext,
 )
@@ -31,7 +31,7 @@ class VoiceProductionPipelineFactory(VoicePipelineFactory):
     The pipeline includes the following steps:
     1. `StepVoiceParsing`: Parses the voice input using the provided `VoiceRecognizer`.
     2. `StepTextToTransactionView`: Converts the parsed text into a transaction view using the provided `LargeLanguageModelBase`.
-    3. `StepTransactionVivePersitence`: Persists the transaction view using the provided `TransactionService`.
+    3. `StepTransactionVivePersistence`: Persists the transaction view using the provided `TransactionService`.
 
     The factory is initialized with the necessary dependencies, including `UserService`, `TransactionService`, `LargeLanguageModelBase`, and `VoiceRecognizer`.
     """
@@ -52,7 +52,7 @@ class VoiceProductionPipelineFactory(VoicePipelineFactory):
         return [
             StepVoiceParsing(context, self.voice_recognizer),
             StepTextToTransactionView(context, self.llm),
-            StepTransactionVivePersitence(context, self.transaction_service),
+            StepTransactionVivePersistence(context, self.transaction_service),
         ]
 
 

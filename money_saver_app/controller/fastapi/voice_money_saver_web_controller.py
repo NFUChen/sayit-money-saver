@@ -1,12 +1,12 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Iterable
 
-from loguru import logger
 import uvicorn
-from money_saver_app.applicaion.money_saver_application import MoneySaverController
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+from money_saver_app.application.money_saver_application import MoneySaverController
+from money_saver_app.controller.fastapi.auth_controller import AuthController
 from money_saver_app.controller.fastapi.middlewares.exception_middleware import (
     ExceptionMiddleware,
 )
@@ -52,11 +52,13 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
             return {"message": "Welcome to Money Saver API"}
 
         self.route_controllers: Iterable[RouterController] = [
-            UesrController(self.user_service, "/api/admin")
+            UesrController("/api/admin", self.user_service),
+            AuthController("/api/auth", self.auth_service),
         ]
 
         for controller in self.route_controllers:
-            controller.register_routes(self.app)
+            router = controller.register_routes()
+            self.app.include_router(router)
 
     def run(self) -> None:
         uvicorn.run(self.app, host="0.0.0.0", port=8000)

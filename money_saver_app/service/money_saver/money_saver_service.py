@@ -2,7 +2,6 @@ from sqlalchemy import Engine
 from sqlmodel import Session
 
 from money_saver_app.service.pipeline_service.pipeline_impls.pipeline_factory import (
-    VoiceDevelopmentPipelineFactory,
     VoicePipelineFactory,
 )
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
@@ -34,10 +33,10 @@ class MoneySaverService:
         self.engine = engine
         self.factory = voice_pipeline_factory
 
-    def execute_pipeline(self, voice_bytes: bytes, token: str) -> bool:
+    def execute_pipeline(self, voice_bytes: bytes, user_id: int) -> bool:
         with Session(self.engine) as session:
             context = VoicePipelineContext(
-                voice_bytes=voice_bytes, session=session, token=token
+                voice_bytes=voice_bytes, session=session, user_id=user_id
             )
             steps = self.factory.create_pipeline(context)
             for step in steps:

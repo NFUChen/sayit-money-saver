@@ -1,6 +1,6 @@
-from application.application_config import BaseApplicationConifig
-from money_saver_app.applicaion.money_saver_application import MoneySaverApplication
-from money_saver_app.applicaion.money_saver_application_config import (
+from application.application_config import BaseApplicationConfig
+from money_saver_app.application.money_saver_application import MoneySaverApplication
+from money_saver_app.application.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
 )
@@ -10,7 +10,7 @@ from money_saver_app.controller.fastapi.voice_money_saver_web_controller import 
 
 
 def main():
-    base_config = BaseApplicationConifig(
+    base_config = BaseApplicationConfig(
         openai_config={"api_key": "", "mode": "json", "model_name": ""},
         ollama_config={
             "host": "10.3.139.93",  # 10.3.139.93
@@ -24,6 +24,10 @@ def main():
         "sqlite:///test.db",
         ApplicationMode.PRODUCTION,
         {"model_name": "base"},
+        {
+            "access_token_expire_minutes": 300,
+            "secret_key": "13OYYwFC0q0VegS7hECaIsZU12dJuLUp7y",
+        },
     )
     app = MoneySaverApplication(app_config)
 

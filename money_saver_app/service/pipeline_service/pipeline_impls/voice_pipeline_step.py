@@ -28,12 +28,11 @@ class VoicePipelineContext(PipelineContext):
         transcribed_text (Optional[str]): The optional transcribed text from the voice data.
     """
 
+    user_id: int
     voice_bytes: bytes = Field(exclude=True)
     session: Session = Field(exclude=True)
-    token: str
 
     view: Optional[TransactionView] = None
-    user_id: Optional[int] = 1
     transcribed_text: Optional[str] = None
     is_saved: bool = False
 
@@ -98,7 +97,7 @@ class StepTextToTransactionView(PipelineStep):
         self.context.view = optional_view
 
 
-class StepTransactionVivePersitence(PipelineStep):
+class StepTransactionVivePersistence(PipelineStep):
     """
     Represents a pipeline step that persists the transaction view generated from the transcribed voice data.
 
