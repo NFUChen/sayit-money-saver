@@ -12,7 +12,7 @@ class AuthMiddleware:
     COOKIE_NAME = "jwt"
 
     def __init__(self, auth_service: AuthService, exclude_routes: list[str]) -> None:
-        logger.info(f"[EXCLUDE ROUTE REGISTERATION] Routes: {exclude_routes}")
+        logger.info(f"[EXCLUDE ROUTE REGISTRATION] Routes: {exclude_routes}")
         self.exclude_routes = exclude_routes
         self.auth_service = auth_service
 

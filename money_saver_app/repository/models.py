@@ -45,6 +45,7 @@ class TransactionItem(SQLModel, table=True):
 
 
 class TransactionRead(TransactionView):
+    id: UUID | None
     updated_at: datetime.datetime | None
     created_at: datetime.datetime | None
 
@@ -78,6 +79,7 @@ class Transaction(SQLModel, table=True):
 
     def as_read(self) -> TransactionRead:
         return TransactionRead(
+            id=self.id,
             transaction_type=self.transaction_type,
             amount=self.amount,
             item=TransactionItemView(

@@ -18,7 +18,7 @@ from money_saver_app.controller.core.middlewares.exception_middleware import (
 )
 from money_saver_app.controller.core.route_controller import RouterController
 from money_saver_app.controller.core.transaction_controller import TransactionController
-from money_saver_app.controller.core.user_controller import UesrController
+from money_saver_app.controller.core.user_controller import UserController
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
     MoneySaverPipelineContext,
     VoicePipelineContext,
@@ -43,7 +43,7 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
 
     The `register_routes` method sets up the routes for the application, including:
     - A root route that returns a welcome message.
-    - Registering the `UesrController` with the `/api/admin` prefix.
+    - Registering the `UserController` with the `/api/admin` prefix.
 
     The `run` method starts the FastAPI application using the `uvicorn` server, listening on `0.0.0.0:8000`.
     """
@@ -101,7 +101,7 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
 
         self.route_controllers: Iterable[RouterController] = [
             AuthController("/api/public/auth", self.auth_service, self.user_service),
-            UesrController("/api/private/admin", self.user_service),
+            UserController("/api/private/admin", self.user_service),
             TransactionController("/api/private/personal", self.transaction_service),
         ]
 

@@ -9,7 +9,7 @@ from money_saver_app.repository.models import User
 from money_saver_app.service.money_saver.user_service import UserService
 
 
-class UesrController(RouterController):
+class UserController(RouterController):
     def __init__(self, router_prefix: str, user_service: UserService) -> None:
         self.router_prefix = router_prefix
         self.user_service = user_service
@@ -18,7 +18,7 @@ class UesrController(RouterController):
         router = APIRouter(prefix=self.router_prefix)
 
         @router.get("/users")
-        def get_all_uesrs(
+        def get_all_users(
             user_id: int = Depends(get_current_user_id),
         ) -> Iterable[User]:
             logger.info(user_id)

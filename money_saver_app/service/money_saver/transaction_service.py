@@ -1,14 +1,104 @@
-from typing import Iterable
+import datetime
+from typing import Any, Iterable
+from typing_extensions import TypedDict
+from openai import BaseModel
+from pydantic import Field, computed_field
 from sqlalchemy import Engine
 from sqlmodel import Session
 
-from money_saver_app.repository.models import Transaction, TransactionItem
+from money_saver_app.repository.models import (
+    Transaction,
+    TransactionItem,
+    TransactionRead,
+)
 from money_saver_app.repository.recorder_repository import (
     TransactionRepository,
     UserRepository,
 )
 from money_saver_app.service.money_saver.error_code import UserNotFoundError
+from money_saver_app.service.money_saver.view_model_common import TransactionType
 from money_saver_app.service.money_saver.views import TransactionView
+
+
+class _ItemDict(TypedDict):
+    name: str
+    amount: int
+
+class _GroupDict(TypedDict):
+    items: list[_ItemDict]
+    total_amount: int
+
+class _GroupedTransactionDict(TypedDict):
+    expense: _GroupDict
+    revenue: _GroupDict
+
+class _TransactionGroupBy(BaseModel):
+    transactions: list[TransactionRead]
+    
+    def as_groups(self) -> _GroupedTransactionDict:
+        group_by_dict = {"expense": {}, "revenue": {}}
+        total_expense = 0
+        total_revenue = 0
+        for transaction in self.transactions:
+            expense_dict = group_by_dict["expense"]
+            revenue_dict = group_by_dict["revenue"]
+            match transaction.transaction_type:
+                case TransactionType.Expense:
+                    if transaction.item.item_category not in expense_dict:
+                        expense_dict[transaction.item.item_category] = 0
+                    expense_dict[transaction.item.item_category] += transaction.amount
+                    total_expense += transaction.amount
+
+                case TransactionType.Revenue:
+                    if transaction.item.item_category not in revenue_dict:
+                        revenue_dict[transaction.item.item_category] = 0
+                    revenue_dict[transaction.item.item_category] += transaction.amount
+                    total_revenue += transaction.amount
+
+        return {
+            "expense": {
+                "items": [
+                    {"name": _name, "amount": amount} for _name, amount in expense_dict.items()
+                ],
+                "total_amount": total_expense,
+            },
+            "revenue": {
+                "items": [
+                    {"name": _name, "amount": amount} for _name, amount in revenue_dict.items()
+                ],
+                "total_amount": total_revenue
+            }
+        }
+
+
+class TransactionSet(BaseModel):
+    transactions: list[TransactionRead]
+
+    private_balance: int = Field(default=0, exclude=True)
+
+    def model_post_init(self, __context: Any) -> None:
+        for transaction in self.transactions:
+            match transaction.transaction_type:
+                case TransactionType.Expense:
+                    self.private_balance -= transaction.amount
+                case TransactionType.Revenue:
+                    self.private_balance += transaction.amount
+
+    @computed_field
+    @property
+    def number_of_transactions(self) -> int:
+        return len(self.transactions)
+
+    @computed_field
+    @property
+    def balance(self) -> int:
+        return self.private_balance
+    
+
+    @computed_field
+    @property
+    def groupby(self) -> _GroupedTransactionDict:
+        return _TransactionGroupBy(transactions= self.transactions).as_groups()
 
 
 class TransactionService:
@@ -61,5 +151,23 @@ class TransactionService:
 
         return True
 
-    def get_all_transaction_by_user_id(self, id: int) -> Iterable[Transaction]:
-        return self.transaction_repo.find_all_transaction_by_user_id(id)
+    def _convert_to_transaction_set(
+        self, transactions: Iterable[Transaction]
+    ) -> TransactionSet:
+        return TransactionSet(
+            transactions=[_model.as_read() for _model in transactions]
+        )
+
+    def get_all_transactions_by_user_id_within_date_range(
+        self, user_id: int, start_date: datetime.date, end_date: datetime.date
+    ) -> TransactionSet:
+        return self._convert_to_transaction_set(
+            self.transaction_repo.find_all_transactions_by_user_id_within_date_range(
+                user_id, start_date, end_date
+            )
+        )
+
+    def get_all_transactions_by_user_id(self, id: int, limit: int) -> TransactionSet:
+        return self._convert_to_transaction_set(
+            self.transaction_repo.find_all_transactions_by_user_id(id, limit)
+        )
