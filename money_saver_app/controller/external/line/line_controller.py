@@ -8,7 +8,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models.messages import TextMessage, AudioMessage
 from linebot.models.events import MessageEvent
 
-from money_saver_app.controller.core.route_controller import RouterController
+from money_saver_app.controller.core.router_controller import RouterController
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.user_service import UserService
 from money_saver_app.service.money_saver.views import (

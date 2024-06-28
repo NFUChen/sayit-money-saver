@@ -10,7 +10,7 @@ from money_saver_app.application.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
 )
-from money_saver_app.controller.core.route_controller import RouterController
+from money_saver_app.controller.core.router_controller import RouterController
 from money_saver_app.controller.external.line.line_controller import (
     LineServiceRouteController,
     MessageContext,

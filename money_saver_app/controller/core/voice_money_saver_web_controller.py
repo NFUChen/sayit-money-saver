@@ -16,7 +16,7 @@ from money_saver_app.controller.core.middlewares.auth_middleware import (
 from money_saver_app.controller.core.middlewares.exception_middleware import (
     ExceptionMiddleware,
 )
-from money_saver_app.controller.core.route_controller import RouterController
+from money_saver_app.controller.core.router_controller import RouterController
 from money_saver_app.controller.core.transaction_controller import TransactionController
 from money_saver_app.controller.core.user_controller import UserController
 from money_saver_app.service.pipeline_service.pipeline_impls.voice_pipeline_step import (
