@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 from loguru import logger
 from money_saver_app.controller.core.depends_utils import get_current_user_id
 from money_saver_app.controller.core.route_controller import RouterController
-from money_saver_app.repository.models import TransactionRead
 from money_saver_app.service.money_saver.transaction_service import (
     TransactionService,
     TransactionSet,

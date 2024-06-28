@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Type
+from typing import Type, Union
 
 from loguru import logger
 from passlib.context import CryptContext
@@ -9,6 +9,11 @@ from application.application_config import BaseApplicationConfig
 from money_saver_app.application.money_saver_application_config import (
     ApplicationMode,
     MoneySaverApplicationConfig,
+)
+from money_saver_app.controller.core.route_controller import RouterController
+from money_saver_app.controller.external.line.line_controller import (
+    LineServiceRouteController,
+    MessageContext,
 )
 from money_saver_app.repository.recorder_repository import (
     TransactionRepository,
@@ -30,6 +35,10 @@ from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisp
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModel
 
+from linebot import LineBotApi, WebhookHandler
+
+from smart_base_model.messaging.behavior_subject import BehaviorSubject
+
 
 @dataclass
 class MoneySaverController(ABC):
@@ -38,18 +47,17 @@ class MoneySaverController(ABC):
     auth_service: AuthService
     money_saver_service: MoneySaverService
     transaction_service: TransactionService
+    external_controllers: list[RouterController]
 
     def run(self) -> None: ...
 
 
 class MoneySaverApplication:
     """
-    The `MoneySaverApplication` class is the main entry point for the Money Saver application.
-    It is responsible for setting up the necessary dependencies, including the database repositories, the money saver service, the voice recognizer, and the language model.
-    The class takes a `MoneySaverApplicationConfig` object as input, which contains the configuration settings for the application, such as the SQL URL, the application mode (development or production), and the language model configuration.
-    The class initializes the database repositories, the money saver service, the voice recognizer, and the language model.
-    It then creates the appropriate pipeline factory based on the application mode, which is used to handle the voice recognition and processing workflows.
-    The `_get_language_model` method is a helper method that is used to create the appropriate language model based on the configuration settings in the `BaseApplicationConfig` object.
+    The `MoneySaverApplication` class is the main entry point for the Money Saver application. It is responsible for setting up and managing the various components of the application, including the language model, voice recognizer, user and transaction services, and external service controllers.
+    The `__init__` method initializes the application configuration, language model, password context, voice recognizer, user and transaction repositories, and various service components. It also sets up the LINE bot API and webhook handler, and creates the external service controllers.
+    The `_get_language_model` method is a helper function that selects the appropriate language model based on the application configuration.
+    The `run_controller` method is used to run a specific `MoneySaverController` instance, which is responsible for handling the application's core functionality.
     """
 
     def __init__(self, app_config: MoneySaverApplicationConfig) -> None:
@@ -95,6 +103,27 @@ class MoneySaverApplication:
             self.voice_recognizer,
         )
 
+        self.webhook_handler = WebhookHandler(
+            self.app_config.line_service_config.channel_secret
+        )
+        self.line_bot_api = LineBotApi(
+            self.app_config.line_service_config.channel_access_token
+        )
+        self.line_message_context = BehaviorSubject[MessageContext[Union[str, bytes]]]()
+
+        self.external_service_controllers: list[RouterController] = [
+            LineServiceRouteController(
+                self.voice_recognizer,
+                self.llm,
+                "/api/public/line",
+                self.money_saver_service,
+                self.user_service,
+                self.line_bot_api,
+                self.webhook_handler,
+                self.line_message_context,
+            )
+        ]
+
         self._handle_logger()
 
     def _handle_logger(self) -> None:
@@ -123,4 +152,5 @@ class MoneySaverApplication:
             self.auth_service,
             self.money_saver_service,
             self.transaction_service,
+            self.external_service_controllers,
         ).run()

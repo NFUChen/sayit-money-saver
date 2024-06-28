@@ -46,6 +46,9 @@ class VoicePipelineContext(MoneySaverPipelineContext):
     voice_bytes: bytes = Field(exclude=True)
     voice_recognizer: VoiceRecognizer = Field(exclude=True)
 
+    def __str__(self) -> str:
+        return f"VoicePipelineContext(user_id={self.user_id}, source_text={self.source_text}, is_saved={self.is_saved}, view={self.view}, llm={self.llm.__class__.__name__}, voice_recognizer={self.voice_recognizer.__class__.__name__})"
+
 
 class StepVoiceParsing(PipelineStep[VoicePipelineContext]):
     """

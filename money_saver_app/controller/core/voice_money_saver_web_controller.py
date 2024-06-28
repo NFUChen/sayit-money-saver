@@ -103,11 +103,13 @@ class VoiceMoneySaverWebController(MoneySaverController, RouterController):
             AuthController("/api/public/auth", self.auth_service, self.user_service),
             UserController("/api/private/admin", self.user_service),
             TransactionController("/api/private/personal", self.transaction_service),
+            *self.external_controllers,
         ]
 
         for controller in self.route_controllers:
             router = controller.register_routes()
+            logger.info(f"[ROUTER REGISTRATION] Router: {router.prefix}")
             self.app.include_router(router)
 
     def run(self) -> None:
-        uvicorn.run(self.app, host="0.0.0.0", port=8000)
+        uvicorn.run(app=self.app, host="0.0.0.0", port=8000)

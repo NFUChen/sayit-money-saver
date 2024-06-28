@@ -14,9 +14,16 @@ class ApplicationMode(Enum):
 
 
 @dataclass
+class LineServiceConfig:
+    channel_access_token: str
+    channel_secret: str
+
+
+@dataclass
 class MoneySaverApplicationConfig:
     base_config: BaseApplicationConfig
     sql_url: str
     mode: ApplicationMode
     openai_whisper_config: OpenAIWhisperConfig
     jwt_config: JwtConfig
+    line_service_config: LineServiceConfig

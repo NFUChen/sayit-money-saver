@@ -24,17 +24,20 @@ class _ItemDict(TypedDict):
     name: str
     amount: int
 
+
 class _GroupDict(TypedDict):
     items: list[_ItemDict]
     total_amount: int
+
 
 class _GroupedTransactionDict(TypedDict):
     expense: _GroupDict
     revenue: _GroupDict
 
+
 class _TransactionGroupBy(BaseModel):
     transactions: list[TransactionRead]
-    
+
     def as_groups(self) -> _GroupedTransactionDict:
         group_by_dict = {"expense": {}, "revenue": {}}
         total_expense = 0
@@ -58,16 +61,18 @@ class _TransactionGroupBy(BaseModel):
         return {
             "expense": {
                 "items": [
-                    {"name": _name, "amount": amount} for _name, amount in expense_dict.items()
+                    {"name": _name, "amount": amount}
+                    for _name, amount in expense_dict.items()
                 ],
                 "total_amount": total_expense,
             },
             "revenue": {
                 "items": [
-                    {"name": _name, "amount": amount} for _name, amount in revenue_dict.items()
+                    {"name": _name, "amount": amount}
+                    for _name, amount in revenue_dict.items()
                 ],
-                "total_amount": total_revenue
-            }
+                "total_amount": total_revenue,
+            },
         }
 
 
@@ -93,12 +98,11 @@ class TransactionSet(BaseModel):
     @property
     def balance(self) -> int:
         return self.private_balance
-    
 
     @computed_field
     @property
     def groupby(self) -> _GroupedTransactionDict:
-        return _TransactionGroupBy(transactions= self.transactions).as_groups()
+        return _TransactionGroupBy(transactions=self.transactions).as_groups()
 
 
 class TransactionService:

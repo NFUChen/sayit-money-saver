@@ -73,6 +73,24 @@ class UserService:
 
         return saved_user
 
+    def register_line_user(self, line_id: str) -> User:
+        optional_user = self.get_user_by_user_name(user_name=line_id)
+        if optional_user is not None:
+            logger.info(
+                f"[LINE USER] Line user already registered: {optional_user.user_name}, skipping registration"
+            )
+            return optional_user
+
+        user = User(
+            user_name=line_id,
+            email="",
+            hashed_password="",
+            role=Role.Guest,
+        )
+        saved_user = self.user_repo.save(user)
+        logger.info(f"[NEW LINE USER] New line user registered: {saved_user.user_name}")
+        return saved_user
+
     def save_user(self, user: User) -> None:
         self.user_repo.save(user)
 

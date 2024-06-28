@@ -1,4 +1,4 @@
-from typing import Literal
+from enum import Enum
 
 from pydantic import Field
 
@@ -7,14 +7,29 @@ from money_saver_app.service.money_saver.view_model_common import TransactionTyp
 from smart_base_model.core.smart_base_model.smart_base_model import SmartBaseModel
 
 
-class AssistantAction(SmartBaseModel["AssistantAction"]):
+class AssistantActionType(Enum):
+    """
+    Represents the different types of actions that an assistant can perform.
+
+    - `AddTransaction`: Used to add a new transaction for a record of expense/revenue. For example, "Add a $50 expense for groceries."
+    - `Reporting`: Used to generate reports, such as a summary of a collection of transactions or the history of transactions. For example, "Show me the transaction history for last month"
+       or "I want to see the records of a certain day".
+
+    Please classify actions accurately based on these definitions.
+    """
+
+    AddTransaction = "add_transaction"
+    Reporting = "reporting"
+
+
+class AssistantActionView(SmartBaseModel["AssistantActionView"]):
     """
     Represents an action that can be performed by an assistant.
 
-    The `action` field specifies the type of action, which can be either "recording" or "reporting".
+    The `action_type` field specifies the type of action
     """
 
-    action: Literal["recording", "reporting"]
+    action_type: AssistantActionType
 
 
 class TransactionItemView(SmartBaseModel["TransactionItemView"]):
