@@ -1,8 +1,10 @@
 from typing import Optional, cast
+from uuid import UUID
 
 from pydantic import Field
 from sqlmodel import Session
 
+from money_saver_app.repository.models import TransactionRead
 from money_saver_app.service.money_saver.error_code import (
     OptionalTextMissingError,
     TransactionViewNotFoundError,
@@ -30,6 +32,7 @@ class MoneySaverPipelineContext(PipelineContext):
     view: Optional[TransactionView] = None
     is_saved: bool = False
     source_text: Optional[str] = None
+    transaction_read: Optional[TransactionRead] = None
 
 
 class VoicePipelineContext(MoneySaverPipelineContext):
@@ -129,8 +132,9 @@ class StepTransactionVivePersistence(PipelineStep[MoneySaverPipelineContext]):
         if optional_view is None:
             raise TransactionViewNotFoundError()
 
-        is_saved = self.transaction_service.save_transaction_view(
+        transaction_read = self.transaction_service.save_transaction_view(
             self.context.user_id, optional_view
         )
 
-        self.context.is_saved = is_saved
+        self.context.is_saved = transaction_read is not None
+        self.context.transaction_read = transaction_read

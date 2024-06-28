@@ -1,17 +1,19 @@
-from typing import Callable, Generic
+from typing import Any, Callable, Generic, TypeVar
+
+from linebot.models.actions import MessageAction, PostbackAction
 from linebot.models.send_messages import (
+    ImageSendMessage,
     SendMessage,
+    StickerSendMessage,
     TextSendMessage,
     VideoSendMessage,
-    ImageSendMessage,
-    StickerSendMessage,
 )
-from linebot.models.template import TemplateSendMessage, ConfirmTemplate
-
+from linebot.models.template import (
+    ButtonsTemplate,
+    ConfirmTemplate,
+    TemplateSendMessage,
+)
 from pydantic import BaseModel, Field
-
-
-from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -34,7 +36,16 @@ class LineStickerSendMessage(StickerSendMessage): ...
 class LineTemplateSendMessage(TemplateSendMessage): ...
 
 
+class LineButtonTemplate(ButtonsTemplate): ...
+
+
 class LineConfirmTemplate(ConfirmTemplate): ...
+
+
+class LineMessageAction(MessageAction): ...
+
+
+class LinePostBackAction(PostbackAction): ...
 
 
 class UserProfile(BaseModel):
@@ -47,4 +58,4 @@ class UserProfile(BaseModel):
 class MessageContext(BaseModel, Generic[T]):
     user_profile: UserProfile
     message_content: T
-    reply_message: Callable[[LineSendMessage], None]
+    reply_message: Callable[[LineSendMessage], Any]

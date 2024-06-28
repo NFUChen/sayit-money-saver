@@ -133,3 +133,23 @@ class SQLCrudRepository(Generic[ID, T]):
             session.commit()
 
         return True
+
+    def delete_by_id(
+        self, id: ID, session: Optional[Session] = None, is_commit: bool = True
+    ) -> bool:
+        if session is None:
+            session = self._create_session()
+
+        entity = self.find_by_id(id, session)
+        if entity:
+            return self.delete(entity, session, is_commit)
+        return False
+
+    def delete_all_by_ids(
+        self, ids: list[ID], session: Optional[Session] = None, is_commit: bool = True
+    ) -> bool:
+        if session is None:
+            session = self._create_session()
+
+        entities = self.find_all_by_ids(ids, session)
+        return self.delete_all(entities, session, is_commit)

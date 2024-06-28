@@ -2,7 +2,6 @@ from enum import Enum
 
 from pydantic import Field
 
-
 from money_saver_app.service.money_saver.view_model_common import TransactionType
 from smart_base_model.core.smart_base_model.smart_base_model import SmartBaseModel
 
@@ -18,8 +17,8 @@ class AssistantActionType(Enum):
     Please classify actions accurately based on these definitions.
     """
 
-    AddTransaction = "add_transaction"
-    Reporting = "reporting"
+    AddTransaction = "AddTransaction"
+    Reporting = "Reporting"
 
 
 class AssistantActionView(SmartBaseModel["AssistantActionView"]):

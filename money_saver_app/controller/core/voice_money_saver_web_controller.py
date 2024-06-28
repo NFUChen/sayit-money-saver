@@ -1,18 +1,16 @@
 from dataclasses import dataclass
 from typing import Annotated, Iterable
 
-from loguru import logger
-from pydantic import BaseModel
 import uvicorn
 from fastapi import Depends, FastAPI, File
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+from pydantic import BaseModel
 
 from money_saver_app.application.money_saver_application import MoneySaverController
 from money_saver_app.controller.core.auth_controller import AuthController
 from money_saver_app.controller.core.depends_utils import get_current_user_id
-from money_saver_app.controller.core.middlewares.auth_middleware import (
-    AuthMiddleware,
-)
+from money_saver_app.controller.core.middlewares.auth_middleware import AuthMiddleware
 from money_saver_app.controller.core.middlewares.exception_middleware import (
     ExceptionMiddleware,
 )

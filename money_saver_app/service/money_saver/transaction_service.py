@@ -1,10 +1,12 @@
 import datetime
-from typing import Any, Iterable
-from typing_extensions import TypedDict
+from typing import Any, Iterable, Optional
+from uuid import UUID
+
 from openai import BaseModel
 from pydantic import Field, computed_field
 from sqlalchemy import Engine
 from sqlmodel import Session
+from typing_extensions import TypedDict
 
 from money_saver_app.repository.models import (
     Transaction,
@@ -133,7 +135,9 @@ class TransactionService:
         self.user_repo = user_repo
         self.transaction_repo = transaction_repo
 
-    def save_transaction_view(self, user_id: int, view: TransactionView) -> bool:
+    def save_transaction_view(
+        self, user_id: int, view: TransactionView
+    ) -> Optional[TransactionRead]:
         with Session(self.engine) as session:
             user = self.user_repo.find_by_id(user_id, session)
             if user is None:
@@ -152,8 +156,9 @@ class TransactionService:
 
             session.add(transaction)
             session.commit()
+            session.refresh(transaction)
 
-        return True
+            return transaction.as_read()
 
     def _convert_to_transaction_set(
         self, transactions: Iterable[Transaction]
@@ -175,3 +180,9 @@ class TransactionService:
         return self._convert_to_transaction_set(
             self.transaction_repo.find_all_transactions_by_user_id(id, limit)
         )
+
+    def is_transaction_exists_by_id(self, id: UUID) -> bool:
+        return self.transaction_repo.find_by_id(id) is not None
+
+    def delete_transaction_by_id(self, id: UUID) -> bool:
+        return self.transaction_repo.delete_by_id(id)

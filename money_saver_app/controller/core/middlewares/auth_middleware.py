@@ -2,9 +2,11 @@
 
 import datetime
 from typing import Callable
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from loguru import logger
+
 from money_saver_app.service.money_saver.auth_service import AuthService
 
 

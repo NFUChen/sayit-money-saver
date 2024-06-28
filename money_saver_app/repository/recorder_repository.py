@@ -1,9 +1,9 @@
 import datetime
 from re import T
 from typing import Optional
+from uuid import UUID
 
-from sqlmodel import select, col
-
+from sqlmodel import col, select
 
 from money_saver_app.repository.models import Transaction, TransactionItem, User
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
@@ -17,7 +17,7 @@ class UserRepository(SQLCrudRepository[int, User]):
         return self._find_by(select(User).where(User.user_name == user_name))
 
 
-class TransactionRepository(SQLCrudRepository[int, Transaction]):
+class TransactionRepository(SQLCrudRepository[UUID, Transaction]):
     def find_all_transactions_by_user_id(
         self, id: int, limit: int
     ) -> list[Transaction]:

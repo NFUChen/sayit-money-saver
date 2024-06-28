@@ -2,6 +2,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Type, Union
 
+from linebot import LineBotApi, WebhookHandler
 from loguru import logger
 from passlib.context import CryptContext
 
@@ -34,9 +35,6 @@ from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisp
 )
 from smart_base_model.llm.large_language_model_base import LargeLanguageModelBase
 from smart_base_model.llm.llm_impls.openai_large_language_model import OpenAIModel
-
-from linebot import LineBotApi, WebhookHandler
-
 from smart_base_model.messaging.behavior_subject import BehaviorSubject
 
 
@@ -116,6 +114,7 @@ class MoneySaverApplication:
                 self.voice_recognizer,
                 self.llm,
                 "/api/public/line",
+                self.transaction_service,
                 self.money_saver_service,
                 self.user_service,
                 self.line_bot_api,
