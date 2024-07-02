@@ -44,9 +44,11 @@ class _TransactionGroupBy(BaseModel):
         group_by_dict = {"expense": {}, "revenue": {}}
         total_expense = 0
         total_revenue = 0
+        
+        expense_dict = group_by_dict["expense"]
+        revenue_dict = group_by_dict["revenue"]
+        
         for transaction in self.transactions:
-            expense_dict = group_by_dict["expense"]
-            revenue_dict = group_by_dict["revenue"]
             match transaction.transaction_type:
                 case TransactionType.Expense:
                     if transaction.item.item_category not in expense_dict:
@@ -181,8 +183,12 @@ class TransactionService:
             self.transaction_repo.find_all_transactions_by_user_id(id, limit)
         )
 
-    def is_transaction_exists_by_id(self, id: UUID) -> bool:
-        return self.transaction_repo.find_by_id(id) is not None
-
+    def get_transaction_by_id(self, id: UUID) -> Optional[TransactionRead]:
+        optional_transaction = self.transaction_repo.find_by_id(id)
+        if optional_transaction is None:
+            return
+        return optional_transaction.as_read()
+    
+    
     def delete_transaction_by_id(self, id: UUID) -> bool:
         return self.transaction_repo.delete_by_id(id)

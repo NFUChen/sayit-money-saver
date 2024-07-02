@@ -8,17 +8,29 @@ from smart_base_model.core.smart_base_model.smart_base_model import SmartBaseMod
 
 class AssistantActionType(Enum):
     """
-    Represents the different types of actions that an assistant can perform.
+    Defines the different types of actions that an assistant can perform.
 
-    - `AddTransaction`: Used to add a new transaction for a record of expense/revenue. For example, "Add a $50 expense for groceries."
-    - `Reporting`: Used to generate reports, such as a summary of a collection of transactions or the history of transactions. For example, "Show me the transaction history for last month"
-       or "I want to see the records of a certain day".
+    Actions:
+        - `AddTransaction`: Represents the action of adding a new transaction, either an expense or revenue. 
+        Example: "Add a $50 expense for groceries."
 
-    Please classify actions accurately based on these definitions.
+        - `Reporting`: Represents the action of generating various reports. This could include a summary of transactions, 
+        a detailed transaction history, or records for a specific period.
+        Examples: 
+            - "Show me the transaction history for last month."
+            - "I want to see the records of a certain day."
+
+        - `Unclear`: Represents the scenario where the assistant is unable to determine the user's intent due to lack of context, 
+        ambiguity, or unrecognizable transaction details.
+        Examples: 
+            - "What's up?" -> This is the scenario where the assistant is unable to determine the user's intent due to lack of context.
+            - "book" -> This is the scenario where the assistant is unable to determine the user's intent due to ambiguity and lack of transaction details (i.e., the amount).
+    **IMPORTANT**
+      - Use `Unclear` action with caution; only use it if you genuinely cannot understand what the user is asking for.
     """
-
     AddTransaction = "AddTransaction"
     Reporting = "Reporting"
+    Unclear = "Unclear"
 
 
 class AssistantActionView(SmartBaseModel["AssistantActionView"]):
@@ -35,7 +47,7 @@ class TransactionItemView(SmartBaseModel["TransactionItemView"]):
     """
     Represents a view model for a transaction item, containing information about the item associated with a transaction.
 
-    The `name` field holds the name of the item.
+    "The `name` field contains the name of the item. Please correct any typos found here."
     The `description` field holds a description of the item.
     The `item_category` field holds the category of the item.
     """

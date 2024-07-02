@@ -141,7 +141,7 @@ class SQLCrudRepository(Generic[ID, T]):
             session = self._create_session()
 
         entity = self.find_by_id(id, session)
-        if entity:
+        if entity is not None:
             return self.delete(entity, session, is_commit)
         return False
 

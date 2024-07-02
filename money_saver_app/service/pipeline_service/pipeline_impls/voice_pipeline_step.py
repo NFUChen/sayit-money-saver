@@ -1,5 +1,4 @@
-from typing import Optional, cast
-from uuid import UUID
+from typing import Optional
 
 from pydantic import Field
 from sqlmodel import Session

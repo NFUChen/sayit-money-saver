@@ -22,6 +22,7 @@ class ExceptionMiddleware:
                 status_code=error_with_code.ERROR_CODE,
             )
         except Exception as base_exception:
+            logger.exception(base_exception)
             error_message = f"Unhandled internal server error: {str(base_exception)}"
             return JSONResponse(
                 content={"detail": error_message, "timestamp": utc_time},

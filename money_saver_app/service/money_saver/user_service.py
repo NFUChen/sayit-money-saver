@@ -4,7 +4,7 @@ from loguru import logger
 from openai import BaseModel
 from passlib.context import CryptContext
 
-from money_saver_app.repository.models import Role, User
+from money_saver_app.repository.models import Platform, Role, User
 from money_saver_app.repository.recorder_repository import UserRepository
 from money_saver_app.service.money_saver.error_code import (
     EmailDuplicationError,
@@ -86,6 +86,7 @@ class UserService:
             email="",
             hashed_password="",
             role=Role.Guest,
+            platform= Platform.LINE
         )
         saved_user = self.user_repo.save(user)
         logger.info(f"[NEW LINE USER] New line user registered: {saved_user.user_name}")
@@ -105,6 +106,9 @@ class UserService:
 
     def get_all_users(self) -> Iterable[User]:
         return self.user_repo.find_all()
+    
+    def get_all_users_on_platform(self, platform: Platform) -> Iterable[User]:
+        return self.user_repo.find_all_users_on_platform(platform)
 
     def __get_hashed_password(self, raw_password: str) -> str:
         return self.password_context.hash(raw_password)

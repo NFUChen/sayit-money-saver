@@ -21,9 +21,11 @@ from money_saver_app.service.external.line.line_message import (
     MessageContext,
     UserProfile,
 )
+from money_saver_app.service.money_saver.error_code import ErrorCodeWithError
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.transaction_service import TransactionService
 from money_saver_app.service.money_saver.user_service import UserService
+from money_saver_app.service.money_saver.view_model_common import TransactionType
 from money_saver_app.service.money_saver.views import (
     AssistantActionType,
     AssistantActionView,
@@ -154,6 +156,14 @@ class LineServiceRouteController(RouterController):
             self._handle_action_view(transaction_action_view, reply_message_wrapper)
 
         return self.router
+    
+    def __format_transaction_read(self, read: TransactionRead) -> str:
+        transaction_category_lookup: dict[TransactionType, str] = {
+            TransactionType.Expense: "費用", TransactionType.Revenue: "收入"
+        }
+        if read.created_at is not None:
+            formatted_datetime = read.created_at.strftime("%m/%d/%Y %H:%M:%S")
+        return f"[{formatted_datetime} | {transaction_category_lookup[TransactionType(read.transaction_type.name)]} | {read.item.item_category}] {read.item.name}: {read.amount}"
 
     def _handle_action_view(
         self,
@@ -162,47 +172,24 @@ class LineServiceRouteController(RouterController):
     ) -> None:
         if transaction_action_view.transaction_id is None:
             return
-
-        if (
-            transaction_action_view.operation_type
-            == TransactionOperationType.DeleteTransaction
-        ):
-            logger.info(
-                f"[TRANSACTION ACTION OPERATION] Delete Transaction: {transaction_action_view.transaction_id}"
-            )
-            is_deleted = self.transaction_service.delete_transaction_by_id(
-                transaction_action_view.transaction_id
-            )
-            if is_deleted:
-                logger.info(
-                    f"[TRANSACTION DELETION] Transaction with id {transaction_action_view.transaction_id} deleted."
-                )
-                reply_message(
-                    LineTextSendMessage(
-                        text=f"已刪除該交易: {transaction_action_view.transaction_id}"
-                    )
-                )
+        
+        optional_transaction_read = self.transaction_service.get_transaction_by_id(transaction_action_view.transaction_id)
+        if optional_transaction_read is None:
+            reply_message(LineTextSendMessage(text=f"該交易已不存在"))
             return
-        if (
-            transaction_action_view.operation_type
-            == TransactionOperationType.AddTransaction
-        ):
-            if not self.transaction_service.is_transaction_exists_by_id(
-                transaction_action_view.transaction_id
-            ):
-                reply_message(
-                    LineTextSendMessage(
-                        text=f"該交易已不存在: {transaction_action_view.transaction_id}"
-                    )
-                )
-            else:
-                reply_message(
-                    LineTextSendMessage(
-                        text=f"已新增該交易: {transaction_action_view.transaction_id}"
-                    )
-                )
 
-    def __handle_add_transaction(
+        if (transaction_action_view.operation_type == TransactionOperationType.DeleteTransaction):
+            logger.info(f"[TRANSACTION ACTION OPERATION] Delete Transaction: {transaction_action_view.transaction_id}")
+            is_deleted = self.transaction_service.delete_transaction_by_id(transaction_action_view.transaction_id)
+            logger.info(f"[TRANSACTION DELETION] Transaction with id {transaction_action_view.transaction_id} deleted.")
+            reply_message(LineTextSendMessage(text=f"已刪除該交易"))
+            return
+        
+        
+        if (transaction_action_view.operation_type == TransactionOperationType.AddTransaction):
+            reply_message(LineTextSendMessage( text=f"已新增該交易:\n {self.__format_transaction_read(optional_transaction_read)}"))
+
+    def __handle_execute_text_pipeline(
         self, source_text: str, user_id: int
     ) -> MoneySaverPipelineContext:
         pipeline_context = self.money_saver_service.execute_text_pipeline(
@@ -211,10 +198,7 @@ class LineServiceRouteController(RouterController):
         logger.info(f"[PIPELINE FINISHED CONTEXT] {pipeline_context}")
         return pipeline_context
 
-    def __format_transaction_read(self, read: TransactionRead) -> str:
-        if read.created_at is not None:
-            formatted_datetime = read.created_at.strftime("%m/%d/%Y %H:%M:%S")
-        return f"[{formatted_datetime} | {read.transaction_type.name} | {read.item.item_category}] {read.item.name}: {read.amount}"
+   
 
     def _create_template_message_for_pipeline_context(
         self, context: MoneySaverPipelineContext
@@ -235,12 +219,9 @@ class LineServiceRouteController(RouterController):
         return LineTemplateSendMessage(
             alt_text="Confirm for adding transaction",
             template=LineButtonTemplate(
-                title="你確定要新增此筆交易嘛",
+                title="是否刪除此筆交易？ (如確認無誤，請略過此訊息)",
                 text=self.__format_transaction_read(context.transaction_read),
                 actions=[
-                    LinePostBackAction(
-                        label="新增", display_text="確定新增", data=add_action
-                    ),
                     LinePostBackAction(
                         label="取消", display_text="確定取消", data=delete_action
                     ),
@@ -266,10 +247,20 @@ class LineServiceRouteController(RouterController):
         logger.info(f"[LINE MESSAGE ACTION] {action}")
         message: Optional[LineSendMessage] = None
         match action.action_type:
-            case AssistantActionType.AddTransaction:
-                context = self.__handle_add_transaction(
-                    source_text=text_message, user_id=cast(int, user.id)
+            case AssistantActionType.Unclear:
+                message = LineTextSendMessage(
+                    text=f"未能解析您的訊息，請重新輸入: {text_message}"
                 )
+                return message
+            case AssistantActionType.AddTransaction:
+                try:
+                    context = self.__handle_execute_text_pipeline(
+                        source_text=text_message, user_id=cast(int, user.id)
+                    )
+                except ErrorCodeWithError as error:
+                    message = LineTextSendMessage(str(error))
+                    return message
+            
                 message = self._create_template_message_for_pipeline_context(context)
                 logger.info(f"[LINE MESSAGE RESPONSE] {message}")
                 return message
