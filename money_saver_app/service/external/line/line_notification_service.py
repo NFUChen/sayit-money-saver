@@ -1,8 +1,11 @@
-from typing import Callable, Iterable
+import datetime
+from typing import Callable, cast
+from loguru import logger
 import schedule
 from linebot import LineBotApi
 from money_saver_app.repository.models import Platform, User
-from money_saver_app.service.money_saver.transaction_service import TransactionService
+from money_saver_app.service.external.line.line_models import LineTextSendMessage
+from money_saver_app.service.money_saver.transaction_service import TransactionService, TransactionSet
 from money_saver_app.service.money_saver.user_service import UserService
 
 
@@ -17,10 +20,45 @@ class LineNotificationService:
         self.user_service = user_service
         self.api = line_push_api
 
-    def __schedule_auto_push_notification(self, jobs: Iterable[Callable]) -> None:
+    def schedule_auto_push_notification(self) -> None:
+        jobs: list[Callable] = [
+            self.schedule_auto_push_notification
+        ]
         for job in jobs:
-            schedule.every().day.at("03:59").do(job)
+            logger.info(f"[JOB SCHEDULING] Scheduling job: {job.__name__}")
+            schedule.every().day.at("23:59").do(job)
+        
+        schedule.run_pending()
+
+    
+    
+    def _format_transaction_set(self, transaction_set: TransactionSet) -> LineTextSendMessage:
+        items_repr = [
+            f"[{(cast(datetime.datetime, transaction.taipei_time_created_at,)).strftime('%Y-%m-%d')} | {transaction.item.item_category}] {transaction.item.name}: {transaction.amount}"
+            for transaction in transaction_set.transactions
+        ]
+        transaction_balance = f"Balance: {transaction_set.balance}"
+        return LineTextSendMessage("\n".join([*items_repr, transaction_balance]))
+
+
+    def _notify_all_users_with_self_transactions(self) -> None:
+        start_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours= 8)
+        end_date = start_date + datetime.timedelta(days= 1)
+        
+        for user in self.all_target_users:
+            if user.id is None:
+                continue
+
+            transaction_set = self.transaction_service.get_all_transactions_by_user_id_within_date_range(
+                user.id,
+                start_date,
+                end_date,
+            )
+            if transaction_set.is_empty_set:
+                continue
+            
+            self.api.push_message(user.user_name, self._format_transaction_set(transaction_set))
 
     @property
-    def all_users(self) -> Iterable[User]:
+    def all_target_users(self) -> list[User]:
         return self.user_service.get_all_users_on_platform(Platform.LINE)

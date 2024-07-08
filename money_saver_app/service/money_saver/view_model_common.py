@@ -50,4 +50,5 @@ class ExpenseCategory(str, Enum):
     Fruits = "Fruits"
     Books = "Books"
     OfficeSupplies = "OfficeSupplies"
+    CreditCard = "CreditCard"
     Other = "Other"

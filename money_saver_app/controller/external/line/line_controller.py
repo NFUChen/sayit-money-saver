@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import Any, Callable, Optional, Union, cast
 from uuid import UUID
@@ -12,7 +13,7 @@ from openai import BaseModel
 
 from money_saver_app.controller.core.router_controller import RouterController
 from money_saver_app.repository.models import TransactionRead
-from money_saver_app.service.external.line.line_message import (
+from money_saver_app.service.external.line.line_models import (
     LineButtonTemplate,
     LinePostBackAction,
     LineSendMessage,
@@ -163,7 +164,7 @@ class LineServiceRouteController(RouterController):
             TransactionType.Income: "收入",
         }
         if read.created_at is not None:
-            formatted_datetime = read.created_at.strftime("%m/%d/%Y %H:%M:%S")
+            formatted_datetime = cast(datetime.datetime,read.taipei_time_created_at).strftime("%m/%d/%Y %H:%M:%S")
         return f"[{formatted_datetime} | {transaction_category_lookup[TransactionType(read.transaction_type.name)]} | {read.item.item_category}] {read.item.name}: {read.amount}"
 
     def _handle_action_view(

@@ -90,6 +90,10 @@ class TransactionSet(BaseModel):
                     self.private_balance -= transaction.amount
                 case TransactionType.Income:
                     self.private_balance += transaction.amount
+                    
+    @property         
+    def is_empty_set(self) -> bool:
+        return len(self.transactions) == 0
 
     @computed_field
     @property
@@ -167,9 +171,7 @@ class TransactionService:
             transactions=[_model.as_read() for _model in transactions]
         )
 
-    def get_all_transactions_by_user_id_within_date_range(
-        self, user_id: int, start_date: datetime.date, end_date: datetime.date
-    ) -> TransactionSet:
+    def get_all_transactions_by_user_id_within_date_range(self, user_id: int, start_date: datetime.date, end_date: datetime.date) -> TransactionSet:
         return self._convert_to_transaction_set(
             self.transaction_repo.find_all_transactions_by_user_id_within_date_range(
                 user_id, start_date, end_date
@@ -186,7 +188,6 @@ class TransactionService:
         if optional_transaction is None:
             return
         return optional_transaction.as_read()
-    
-    
+
     def delete_transaction_by_id(self, id: UUID) -> bool:
         return self.transaction_repo.delete_by_id(id)

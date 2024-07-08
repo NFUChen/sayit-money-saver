@@ -21,6 +21,7 @@ from money_saver_app.repository.recorder_repository import (
     UserRepository,
 )
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
+from money_saver_app.service.external.line.line_notification_service import LineNotificationService
 from money_saver_app.service.money_saver.auth_service import AuthService
 from money_saver_app.service.money_saver.money_saver_service import MoneySaverService
 from money_saver_app.service.money_saver.transaction_service import TransactionService
@@ -122,8 +123,15 @@ class MoneySaverApplication:
                 self.line_message_context,
             )
         ]
-
+        
+        self.line_notification_service = LineNotificationService(
+            self.line_bot_api, 
+            self.user_service, 
+            self.transaction_service
+        )
+        
         self._handle_logger()
+        self.line_notification_service.schedule_auto_push_notification()
 
     def _handle_logger(self) -> None:
         logger.add("./log/server.log", rotation="1 day", retention="1 month")
