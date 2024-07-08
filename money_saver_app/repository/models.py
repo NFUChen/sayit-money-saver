@@ -1,6 +1,5 @@
 import datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import computed_field
@@ -51,6 +50,9 @@ class TransactionItem(SQLModel, table=True):
     )
 
 
+class TransactionItemRead(TransactionItemView):
+    item_category: str
+
 class TransactionRead(TransactionView):
     id: UUID | None
     updated_at: datetime.datetime | None
@@ -96,7 +98,7 @@ class Transaction(SQLModel, table=True):
             id=self.id,
             transaction_type=self.transaction_type,
             amount=self.amount,
-            item=TransactionItemView(
+            item=TransactionItemRead(
                 name=self.item.name,
                 description=self.item.description,
                 item_category=self.item.item_category,

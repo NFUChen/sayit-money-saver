@@ -31,7 +31,7 @@ class MoneySaverPipelineContext(PipelineContext):
     view: Optional[TransactionView] = None
     is_saved: bool = False
     source_text: Optional[str] = None
-    transaction_read: Optional[TransactionRead] = None
+    transaction_read: Optional[TransactionRead] = Field(default= None, exclude=True)
 
 
 class VoicePipelineContext(MoneySaverPipelineContext):

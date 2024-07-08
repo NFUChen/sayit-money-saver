@@ -2,8 +2,8 @@ import datetime
 from typing import Any, Iterable, Optional
 from uuid import UUID
 
-from openai import BaseModel
-from pydantic import Field, computed_field
+
+from pydantic import BaseModel, Field, computed_field
 from sqlalchemy import Engine
 from sqlmodel import Session
 from typing_extensions import TypedDict
@@ -34,20 +34,18 @@ class _GroupDict(TypedDict):
 
 class _GroupedTransactionDict(TypedDict):
     expense: _GroupDict
-    revenue: _GroupDict
+    income: _GroupDict
 
 
 class _TransactionGroupBy(BaseModel):
     transactions: list[TransactionRead]
 
     def as_groups(self) -> _GroupedTransactionDict:
-        group_by_dict = {"expense": {}, "revenue": {}}
+        group_by_dict = {"expense": {}, "income": {}}
         total_expense = 0
-        total_revenue = 0
-        
+        total_income = 0
         expense_dict = group_by_dict["expense"]
-        revenue_dict = group_by_dict["revenue"]
-        
+        income_dict = group_by_dict["income"]
         for transaction in self.transactions:
             match transaction.transaction_type:
                 case TransactionType.Expense:
@@ -56,11 +54,11 @@ class _TransactionGroupBy(BaseModel):
                     expense_dict[transaction.item.item_category] += transaction.amount
                     total_expense += transaction.amount
 
-                case TransactionType.Revenue:
-                    if transaction.item.item_category not in revenue_dict:
-                        revenue_dict[transaction.item.item_category] = 0
-                    revenue_dict[transaction.item.item_category] += transaction.amount
-                    total_revenue += transaction.amount
+                case TransactionType.Income:
+                    if transaction.item.item_category not in income_dict:
+                        income_dict[transaction.item.item_category] = 0
+                    income_dict[transaction.item.item_category] += transaction.amount
+                    total_income += transaction.amount
 
         return {
             "expense": {
@@ -70,12 +68,12 @@ class _TransactionGroupBy(BaseModel):
                 ],
                 "total_amount": total_expense,
             },
-            "revenue": {
+            "income": {
                 "items": [
                     {"name": _name, "amount": amount}
-                    for _name, amount in revenue_dict.items()
+                    for _name, amount in income_dict.items()
                 ],
-                "total_amount": total_revenue,
+                "total_amount": total_income,
             },
         }
 
@@ -90,7 +88,7 @@ class TransactionSet(BaseModel):
             match transaction.transaction_type:
                 case TransactionType.Expense:
                     self.private_balance -= transaction.amount
-                case TransactionType.Revenue:
+                case TransactionType.Income:
                     self.private_balance += transaction.amount
 
     @computed_field

@@ -159,7 +159,7 @@ class LineServiceRouteController(RouterController):
     
     def __format_transaction_read(self, read: TransactionRead) -> str:
         transaction_category_lookup: dict[TransactionType, str] = {
-            TransactionType.Expense: "費用", TransactionType.Revenue: "收入"
+            TransactionType.Expense: "費用", TransactionType.Income: "收入"
         }
         if read.created_at is not None:
             formatted_datetime = read.created_at.strftime("%m/%d/%Y %H:%M:%S")
