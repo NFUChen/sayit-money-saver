@@ -12,16 +12,17 @@ from money_saver_app.service.money_saver.views import (
     TransactionView,
 )
 
+
 class Platform(str, Enum):
     Self = "Self"
     LINE = "LINE"
+
 
 class Role(str, Enum):
     Admin = "Admin"
     User = "User"
     Guest = "Guest"
     BlockedUser = "BlockedUser"
-
 
 
 class User(SQLModel, table=True):
@@ -32,7 +33,7 @@ class User(SQLModel, table=True):
     transactions: list["Transaction"] = Relationship(back_populates="user")
     id: int | None = Field(default=None, primary_key=True)
     role: Role
-    platform: Platform = Field(default= Platform.Self)
+    platform: Platform = Field(default=Platform.Self)
 
 
 class TransactionItem(SQLModel, table=True):
@@ -53,17 +54,18 @@ class TransactionItem(SQLModel, table=True):
 class TransactionItemRead(TransactionItemView):
     item_category: str
 
+
 class TransactionRead(TransactionView):
     id: UUID | None
     updated_at: datetime.datetime | None
     created_at: datetime.datetime | None
-    
+
     @computed_field
     @property
     def taipei_time_created_at(self) -> datetime.datetime | None:
         if self.created_at is None:
             return
-        return (self.created_at + datetime.timedelta(hours=8))
+        return self.created_at + datetime.timedelta(hours=8)
 
 
 class Transaction(SQLModel, table=True):

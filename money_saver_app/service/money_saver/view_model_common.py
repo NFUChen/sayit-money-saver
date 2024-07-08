@@ -5,6 +5,7 @@ class TransactionType(str, Enum):
     Income = "Income"
     Expense = "Expense"
 
+
 class IncomeCategory(str, Enum):
     Salary = "Salary"
     Bonus = "Bonus"
@@ -17,6 +18,7 @@ class IncomeCategory(str, Enum):
     Dividend = "Dividend"
     Investment = "Investment"
     Other = "Other"
+
 
 class ExpenseCategory(str, Enum):
     Dining = "Dining"

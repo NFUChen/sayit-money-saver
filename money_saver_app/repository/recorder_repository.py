@@ -5,7 +5,12 @@ from uuid import UUID
 
 from sqlmodel import col, select
 
-from money_saver_app.repository.models import Platform, Transaction, TransactionItem, User
+from money_saver_app.repository.models import (
+    Platform,
+    Transaction,
+    TransactionItem,
+    User,
+)
 from money_saver_app.repository.sql_crud_repository import SQLCrudRepository
 
 
@@ -15,7 +20,7 @@ class UserRepository(SQLCrudRepository[int, User]):
 
     def find_user_by_user_name(self, user_name: str) -> Optional[User]:
         return self._find_by(select(User).where(User.user_name == user_name))
-    
+
     def find_all_users_on_platform(self, platform: Platform) -> list[User]:
         return self._find_all_by(select(User).where(User.platform == platform))
 

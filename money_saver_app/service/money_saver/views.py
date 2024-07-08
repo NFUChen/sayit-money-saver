@@ -4,7 +4,11 @@ from typing_extensions import Self
 
 from pydantic import Field, model_validator
 
-from money_saver_app.service.money_saver.view_model_common import ExpenseCategory, IncomeCategory, TransactionType
+from money_saver_app.service.money_saver.view_model_common import (
+    ExpenseCategory,
+    IncomeCategory,
+    TransactionType,
+)
 from smart_base_model.core.smart_base_model.smart_base_model import SmartBaseModel
 
 
@@ -13,25 +17,26 @@ class AssistantActionType(Enum):
     Defines the different types of actions that an assistant can perform.
 
     Actions:
-        - `AddTransaction`: Represents the action of adding a new transaction, either an expense or revenue. 
-        Patterns such as: 
+        - `AddTransaction`: Represents the action of adding a new transaction, either an expense or revenue.
+        Patterns such as:
             - "Add a <amount> expense for <item name>"
             - "<item name> <amount>"
-        - `Reporting`: Represents the action of generating various reports. This could include a summary of transactions, 
+        - `Reporting`: Represents the action of generating various reports. This could include a summary of transactions,
         a detailed transaction history, or records for a specific period.
-        Examples: 
+        Examples:
             - "Show me the transaction history for last month."
             - "I want to see the records of a certain day."
 
-        - `Unclear`: Represents the scenario where the assistant is unable to determine the user's intent due to lack of context, 
+        - `Unclear`: Represents the scenario where the assistant is unable to determine the user's intent due to lack of context,
         ambiguity, or unrecognizable transaction details.
-        Examples: 
+        Examples:
             - "What's up?" -> This is the scenario where the assistant is unable to determine the user's intent due to lack of context.
             - "book" -> This is the scenario where the assistant is unable to determine the user's intent due to ambiguity and lack of transaction details (i.e., the amount).
     **IMPORTANT**
       - Use `Unclear` action with caution; only use it if you genuinely cannot understand what the user is asking for.
       - If an item name with amount is specified (e.g., '<item name> <amount>'), please use the `AddTransaction` action instead.
     """
+
     AddTransaction = "AddTransaction"
     Reporting = "Reporting"
     Unclear = "Unclear"
@@ -89,16 +94,18 @@ class TransactionView(SmartBaseModel["TransactionView"]):
     amount: int = Field(gt=0, default=0)
     item: TransactionItemView
 
-
-    @model_validator(mode= "after")
+    @model_validator(mode="after")
     def _valid_transaction_item(self) -> Self:
         match self.transaction_type.value:
             case TransactionType.Expense.value:
                 if isinstance(self.item.item_category, IncomeCategory):
-                    raise ValueError(f"The transaction type is {self.transaction_type}, but the item category is {self.item.item_category}")
+                    raise ValueError(
+                        f"The transaction type is {self.transaction_type}, but the item category is {self.item.item_category}"
+                    )
             case TransactionType.Income.value:
                 if isinstance(self.item.item_category, ExpenseCategory):
-                    raise ValueError(f"The transaction type is {self.transaction_type}, but the item category is {self.item.item_category}")
-        
-        return self
+                    raise ValueError(
+                        f"The transaction type is {self.transaction_type}, but the item category is {self.item.item_category}"
+                    )
 
+        return self

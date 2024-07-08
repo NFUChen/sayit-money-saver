@@ -156,10 +156,11 @@ class LineServiceRouteController(RouterController):
             self._handle_action_view(transaction_action_view, reply_message_wrapper)
 
         return self.router
-    
+
     def __format_transaction_read(self, read: TransactionRead) -> str:
         transaction_category_lookup: dict[TransactionType, str] = {
-            TransactionType.Expense: "費用", TransactionType.Income: "收入"
+            TransactionType.Expense: "費用",
+            TransactionType.Income: "收入",
         }
         if read.created_at is not None:
             formatted_datetime = read.created_at.strftime("%m/%d/%Y %H:%M:%S")
@@ -172,22 +173,39 @@ class LineServiceRouteController(RouterController):
     ) -> None:
         if transaction_action_view.transaction_id is None:
             return
-        
-        optional_transaction_read = self.transaction_service.get_transaction_by_id(transaction_action_view.transaction_id)
+
+        optional_transaction_read = self.transaction_service.get_transaction_by_id(
+            transaction_action_view.transaction_id
+        )
         if optional_transaction_read is None:
             reply_message(LineTextSendMessage(text=f"該交易已不存在"))
             return
 
-        if (transaction_action_view.operation_type == TransactionOperationType.DeleteTransaction):
-            logger.info(f"[TRANSACTION ACTION OPERATION] Delete Transaction: {transaction_action_view.transaction_id}")
-            is_deleted = self.transaction_service.delete_transaction_by_id(transaction_action_view.transaction_id)
-            logger.info(f"[TRANSACTION DELETION] Transaction with id {transaction_action_view.transaction_id} deleted.")
+        if (
+            transaction_action_view.operation_type
+            == TransactionOperationType.DeleteTransaction
+        ):
+            logger.info(
+                f"[TRANSACTION ACTION OPERATION] Delete Transaction: {transaction_action_view.transaction_id}"
+            )
+            is_deleted = self.transaction_service.delete_transaction_by_id(
+                transaction_action_view.transaction_id
+            )
+            logger.info(
+                f"[TRANSACTION DELETION] Transaction with id {transaction_action_view.transaction_id} deleted."
+            )
             reply_message(LineTextSendMessage(text=f"已刪除該交易"))
             return
-        
-        
-        if (transaction_action_view.operation_type == TransactionOperationType.AddTransaction):
-            reply_message(LineTextSendMessage( text=f"已新增該交易:\n {self.__format_transaction_read(optional_transaction_read)}"))
+
+        if (
+            transaction_action_view.operation_type
+            == TransactionOperationType.AddTransaction
+        ):
+            reply_message(
+                LineTextSendMessage(
+                    text=f"已新增該交易:\n {self.__format_transaction_read(optional_transaction_read)}"
+                )
+            )
 
     def __handle_execute_text_pipeline(
         self, source_text: str, user_id: int
@@ -197,8 +215,6 @@ class LineServiceRouteController(RouterController):
         )
         logger.info(f"[PIPELINE FINISHED CONTEXT] {pipeline_context}")
         return pipeline_context
-
-   
 
     def _create_template_message_for_pipeline_context(
         self, context: MoneySaverPipelineContext
@@ -260,7 +276,7 @@ class LineServiceRouteController(RouterController):
                 except ErrorCodeWithError as error:
                     message = LineTextSendMessage(str(error))
                     return message
-            
+
                 message = self._create_template_message_for_pipeline_context(context)
                 logger.info(f"[LINE MESSAGE RESPONSE] {message}")
                 return message

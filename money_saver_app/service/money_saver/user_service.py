@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Optional
 
 from loguru import logger
 from openai import BaseModel
@@ -86,7 +86,7 @@ class UserService:
             email="",
             hashed_password="",
             role=Role.Guest,
-            platform= Platform.LINE
+            platform=Platform.LINE,
         )
         saved_user = self.user_repo.save(user)
         logger.info(f"[NEW LINE USER] New line user registered: {saved_user.user_name}")
@@ -104,10 +104,10 @@ class UserService:
     def get_user_by_id(self, id: int) -> Optional[User]:
         return self.user_repo.find_by_id(id)
 
-    def get_all_users(self) -> Iterable[User]:
+    def get_all_users(self) -> list[User]:
         return self.user_repo.find_all()
-    
-    def get_all_users_on_platform(self, platform: Platform) -> Iterable[User]:
+
+    def get_all_users_on_platform(self, platform: Platform) -> list[User]:
         return self.user_repo.find_all_users_on_platform(platform)
 
     def __get_hashed_password(self, raw_password: str) -> str:
