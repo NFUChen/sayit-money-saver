@@ -14,8 +14,9 @@ class AssistantActionType(Enum):
 
     Actions:
         - `AddTransaction`: Represents the action of adding a new transaction, either an expense or revenue. 
-        Example: "Add a $50 expense for groceries."
-
+        Patterns such as: 
+            - "Add a <amount> expense for <item name>"
+            - "<item name> <amount>"
         - `Reporting`: Represents the action of generating various reports. This could include a summary of transactions, 
         a detailed transaction history, or records for a specific period.
         Examples: 
@@ -29,6 +30,7 @@ class AssistantActionType(Enum):
             - "book" -> This is the scenario where the assistant is unable to determine the user's intent due to ambiguity and lack of transaction details (i.e., the amount).
     **IMPORTANT**
       - Use `Unclear` action with caution; only use it if you genuinely cannot understand what the user is asking for.
+      - If an item name with amount is specified (e.g., '<item name> <amount>'), please use the `AddTransaction` action instead.
     """
     AddTransaction = "AddTransaction"
     Reporting = "Reporting"
@@ -78,8 +80,9 @@ class TransactionView(SmartBaseModel["TransactionView"]):
         絕大部分軟體使用者為中文使用者, 請使用『繁體中文』建立此物件
 
     Examples:
-        - 雞腿便當100 -> 雞腿便當 NT100
-        - 牛奶60 -> 牛奶 NT60
+        Pattern <item name> <amount>
+            - 雞腿便當100 -> 雞腿便當 NT100
+            - 牛奶60 -> 牛奶 NT60
     """
 
     transaction_type: TransactionType

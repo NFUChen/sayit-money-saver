@@ -37,7 +37,7 @@ class ExpenseCategory(str, Enum):
     Pets = "Pets"
     Beauty = "Beauty"
     Electronics = "Electronics"
-    FastFood = "FastFood"
+    Food = "Food"
     Alcohol = "Alcohol"
     Vegetables = "Vegetables"
     Snacks = "Snacks"
