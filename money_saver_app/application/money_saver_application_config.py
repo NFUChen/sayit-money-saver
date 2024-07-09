@@ -8,11 +8,6 @@ from money_saver_app.service.voice_recognizer.voice_recognizer_impl.openai_whisp
 )
 
 
-class ApplicationMode(Enum):
-    DEVELOPMENT = "development"
-    PRODUCTION = "production"
-
-
 @dataclass
 class LineServiceConfig:
     channel_access_token: str
@@ -23,7 +18,6 @@ class LineServiceConfig:
 class MoneySaverApplicationConfig:
     base_config: BaseApplicationConfig
     sql_url: str
-    mode: ApplicationMode
     openai_whisper_config: OpenAIWhisperConfig
     jwt_config: JwtConfig
     line_service_config: LineServiceConfig

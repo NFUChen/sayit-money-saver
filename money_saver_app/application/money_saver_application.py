@@ -8,7 +8,6 @@ from passlib.context import CryptContext
 
 from application.application_config import BaseApplicationConfig
 from money_saver_app.application.money_saver_application_config import (
-    ApplicationMode,
     MoneySaverApplicationConfig,
 )
 from money_saver_app.controller.core.router_controller import RouterController
@@ -91,12 +90,9 @@ class MoneySaverApplication:
             engine, self.user_repo, self.transaction_repo
         )
 
-        match self.app_config.mode:
-            case ApplicationMode.PRODUCTION:
-                self.voice_pipeline_factory = VoicePipelineFactory()
-                self.text_pipeline_factory = TextPipelineFactory()
-            case ApplicationMode.DEVELOPMENT:
-                self.pipeline_factory = VoiceDevelopmentPipelineFactory()
+
+        self.voice_pipeline_factory = VoicePipelineFactory()
+        self.text_pipeline_factory = TextPipelineFactory()
 
         self.money_saver_service = MoneySaverService(
             engine,
