@@ -17,6 +17,7 @@ from money_saver_app.controller.external.line.line_controller import (
     MessageContext,
 )
 from money_saver_app.repository.recorder_repository import (
+    ExternalUserRepository,
     TransactionRepository,
     UserRepository,
 )
@@ -74,8 +75,9 @@ class MoneySaverApplication:
 
         engine = SQLCrudRepository.create_all_tables(app_config.sql_url)
         self.user_repo = UserRepository(engine)
+        self.external_user_repo = ExternalUserRepository(engine)
 
-        self.user_service = UserService(self.user_repo, self.password_context)
+        self.user_service = UserService(engine,self.user_repo, self.external_user_repo ,self.password_context)
         self.auth_service = AuthService(
             self.user_service, self.password_context, app_config.jwt_config
         )

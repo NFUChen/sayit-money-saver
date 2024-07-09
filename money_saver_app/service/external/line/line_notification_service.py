@@ -3,8 +3,8 @@ from typing import Callable, cast
 from loguru import logger
 import schedule
 from linebot import LineBotApi
-from money_saver_app.repository.models import Platform, User
-from money_saver_app.service.external.line.line_models import LineTextSendMessage
+from money_saver_app.repository.models import Platform, UserRead
+from money_saver_app.service.external.line.line_models import LineTextSendMessage, UserProfile
 from money_saver_app.service.money_saver.transaction_service import TransactionService, TransactionSet
 from money_saver_app.service.money_saver.user_service import UserService
 
@@ -46,9 +46,6 @@ class LineNotificationService:
         end_date = start_date + datetime.timedelta(days= 1)
         
         for user in self.all_target_users:
-            if user.id is None:
-                continue
-
             transaction_set = self.transaction_service.get_all_transactions_by_user_id_within_date_range(
                 user.id,
                 start_date,
@@ -56,9 +53,9 @@ class LineNotificationService:
             )
             if transaction_set.is_empty_set:
                 continue
-            
-            self.api.push_message(user.user_name, self._format_transaction_set(transaction_set))
+            user_profile = UserProfile.model_validate_json(self.api.get_profile(user.external_id).as_json_string())
+            self.api.push_message(user.external_id, self._format_transaction_set(transaction_set))
 
     @property
-    def all_target_users(self) -> list[User]:
+    def all_target_users(self) -> list[UserRead]:
         return self.user_service.get_all_users_on_platform(Platform.LINE)

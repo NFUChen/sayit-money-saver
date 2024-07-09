@@ -1,5 +1,6 @@
 import datetime
 from enum import Enum
+from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import computed_field
@@ -24,6 +25,14 @@ class Role(str, Enum):
     Guest = "Guest"
     BlockedUser = "BlockedUser"
 
+class UserRead(SQLModel):
+    id: int
+    user_name: str
+    email: str
+    role: Role
+    platform: Platform
+    external_id: Optional[str]
+    hashed_password: str = Field(exclude=True)
 
 class User(SQLModel, table=True):
     __tablename__: str = "user"
@@ -33,7 +42,30 @@ class User(SQLModel, table=True):
     transactions: list["Transaction"] = Relationship(back_populates="user")
     id: int | None = Field(default=None, primary_key=True)
     role: Role
-    platform: Platform = Field(default=Platform.Self)
+    external_user: Optional["ExternalUser"] = Relationship(back_populates="user")
+    
+    def as_read(self) -> UserRead:
+        if self.id is None:
+            raise ValueError("[INVALID USER ID] User id is None")
+        
+        return UserRead(
+            id=self.id,
+            user_name=self.user_name,
+            email=self.email,
+            role=self.role,
+            platform=self.external_user.platform if self.external_user else Platform.Self,
+            external_id=self.external_user.external_id if self.external_user else None,
+            hashed_password= self.hashed_password
+        )
+    
+    
+class ExternalUser(SQLModel, table=True):
+    __tablename__: str = "external_user"
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
+    platform: Platform
+    external_id: str
+    user: User = Relationship(back_populates="external_user", sa_relationship_kwargs={"lazy": "joined"})
 
 
 class TransactionItem(SQLModel, table=True):

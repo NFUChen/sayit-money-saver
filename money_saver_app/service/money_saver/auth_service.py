@@ -6,7 +6,7 @@ import jwt
 from loguru import logger
 from passlib.context import CryptContext
 
-from money_saver_app.repository.models import User
+from money_saver_app.repository.models import UserRead
 from money_saver_app.service.money_saver.error_code import (
     PasswordNotMatchError,
     UserNotFoundError,
@@ -83,7 +83,7 @@ class AuthService:
         return jwt.encode(payload_copy, self.secret_key, algorithm=self.jwt_algorithm)
 
     def __user_login_base_func(
-        self, optiona_user: Optional[User], input_password: str
+        self, optiona_user: Optional[UserRead], input_password: str
     ) -> JsonWebToken:
         if optiona_user is None:
             raise UserNotFoundError()
