@@ -38,7 +38,7 @@ class LineNotificationService:
         self, transaction_set: TransactionSet
     ) -> LineTextSendMessage:
         items_repr = [
-            f"[{(cast(datetime.datetime, transaction.taipei_time_created_at,)).strftime('%Y-%m-%d')} | {transaction.item.item_category}] {transaction.item.name}: {transaction.amount}"
+            f"[{transaction.recorded_date} | {transaction.item.item_category}] {transaction.item.name}: {transaction.amount}"
             for transaction in transaction_set.transactions
         ]
         transaction_balance = f"Balance: {transaction_set.balance}"

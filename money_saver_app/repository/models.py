@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import computed_field
 from sqlalchemy import CheckConstraint, DateTime, func
 from sqlmodel import Column, Field, Relationship, SQLModel
 
@@ -13,6 +12,12 @@ from money_saver_app.service.money_saver.views import (
     TransactionView,
 )
 
+
+def get_taipei_date() -> datetime.date:
+    """
+    Returns the Taipei date.
+    """
+    return (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours= 8)).date()
 
 class Platform(str, Enum):
     Self = "Self"
@@ -97,13 +102,7 @@ class TransactionRead(TransactionView):
     id: UUID | None
     updated_at: datetime.datetime | None
     created_at: datetime.datetime | None
-
-    @computed_field
-    @property
-    def taipei_time_created_at(self) -> datetime.datetime | None:
-        if self.created_at is None:
-            return
-        return self.created_at + datetime.timedelta(hours=8)
+    recorded_date: datetime.date
 
 
 class Transaction(SQLModel, table=True):
@@ -112,7 +111,8 @@ class Transaction(SQLModel, table=True):
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     transaction_type: TransactionType = Field(index=True)
     amount: int
-
+    recorded_date: datetime.date = Field(default_factory= get_taipei_date,index=True)
+    
     user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     user: User = Relationship(back_populates="transactions")
 
@@ -137,6 +137,7 @@ class Transaction(SQLModel, table=True):
         return TransactionRead(
             id=self.id,
             transaction_type=self.transaction_type,
+            recorded_date=self.recorded_date,
             amount=self.amount,
             item=TransactionItemRead(
                 name=self.item.name,
