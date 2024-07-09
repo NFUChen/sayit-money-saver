@@ -6,8 +6,17 @@ from passlib.context import CryptContext
 from sqlalchemy import Engine
 from sqlmodel import Session
 
-from money_saver_app.repository.models import ExternalUser, Platform, Role, User, UserRead
-from money_saver_app.repository.recorder_repository import ExternalUserRepository, UserRepository
+from money_saver_app.repository.models import (
+    ExternalUser,
+    Platform,
+    Role,
+    User,
+    UserRead,
+)
+from money_saver_app.repository.recorder_repository import (
+    ExternalUserRepository,
+    UserRepository,
+)
 from money_saver_app.service.money_saver.error_code import (
     EmailDuplicationError,
     UserNotFoundError,
@@ -42,7 +51,11 @@ class UserService:
     """
 
     def __init__(
-        self, sql_engine: Engine, user_repo: UserRepository, external_uesr_repo: ExternalUserRepository, password_context: CryptContext, 
+        self,
+        sql_engine: Engine,
+        user_repo: UserRepository,
+        external_uesr_repo: ExternalUserRepository,
+        password_context: CryptContext,
     ) -> None:
         self.engine = sql_engine
         self.password_context = password_context
@@ -78,34 +91,34 @@ class UserService:
         return saved_user.as_read()
 
     def register_line_user(self, line_id: str) -> UserRead:
-        optional_external_user = self.external_uesr_repo.find_user_by_external_id_on_platform(Platform.LINE,line_id)
+        optional_external_user = (
+            self.external_uesr_repo.find_user_by_external_id_on_platform(
+                Platform.LINE, line_id
+            )
+        )
         if optional_external_user is not None:
             logger.info(
                 f"[LINE USER] Line user already registered: {optional_external_user.external_id}, skipping registration"
             )
-            
-            optional_user = self.user_repo.find_by_id(cast(int, optional_external_user.user_id))
+
+            optional_user = self.user_repo.find_by_id(
+                cast(int, optional_external_user.user_id)
+            )
             if optional_user is None:
                 raise UserNotFoundError(user_id=optional_external_user.user_id)
             return optional_user.as_read()
 
-        
         with Session(self.engine, expire_on_commit=False) as session:
-            user = User(
-                user_name="",
-                email="",
-                hashed_password="",
-                role=Role.Guest
-            )
+            user = User(user_name="", email="", hashed_password="", role=Role.Guest)
             external_user = ExternalUser(
-                user=user,
-                external_id=line_id,
-                platform=Platform.LINE
+                user=user, external_id=line_id, platform=Platform.LINE
             )
             session.add(user)
             session.add(external_user)
             session.commit()
-            logger.info(f"[NEW LINE USER] New line user registered: {external_user.external_id}")
+            logger.info(
+                f"[NEW LINE USER] New line user registered: {external_user.external_id}"
+            )
             session.refresh(user)
             return user.as_read()
 
@@ -117,7 +130,6 @@ class UserService:
         if optional_user is None:
             return
         return optional_user.as_read()
- 
 
     def get_user_by_user_name(self, user_name: str) -> Optional[UserRead]:
         optional_user = self.user_repo.find_user_by_user_name(user_name)
@@ -135,7 +147,12 @@ class UserService:
         return [user.as_read() for user in self.user_repo.find_all()]
 
     def get_all_users_on_platform(self, platform: Platform) -> list[UserRead]:
-        return [external_user.user.as_read() for external_user in self.external_uesr_repo.find_all_users_on_platform(platform)]
+        return [
+            external_user.user.as_read()
+            for external_user in self.external_uesr_repo.find_all_users_on_platform(
+                platform
+            )
+        ]
 
     def __get_hashed_password(self, raw_password: str) -> str:
         return self.password_context.hash(raw_password)

@@ -164,7 +164,9 @@ class LineServiceRouteController(RouterController):
             TransactionType.Income: "收入",
         }
         if read.created_at is not None:
-            formatted_datetime = cast(datetime.datetime,read.taipei_time_created_at).strftime("%m/%d/%Y %H:%M:%S")
+            formatted_datetime = cast(
+                datetime.datetime, read.taipei_time_created_at
+            ).strftime("%m/%d/%Y %H:%M:%S")
         return f"[{formatted_datetime} | {transaction_category_lookup[TransactionType(read.transaction_type.name)]} | {read.item.item_category}] {read.item.name}: {read.amount}"
 
     def _handle_action_view(

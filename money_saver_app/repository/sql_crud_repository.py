@@ -57,13 +57,21 @@ class SQLCrudRepository(Generic[ID, T]):
 
         return True
 
-    def _find_by(self, statement: Union[Select, SelectOfScalar], session: Optional[Session] = None) -> Optional[T]:
+    def _find_by(
+        self,
+        statement: Union[Select, SelectOfScalar],
+        session: Optional[Session] = None,
+    ) -> Optional[T]:
         if session is None:
             session = self._create_session()
-        
+
         return session.exec(statement).first()
 
-    def _find_all_by(self, statement: Union[Select, SelectOfScalar], session: Optional[Session] = None) -> list[T]:
+    def _find_all_by(
+        self,
+        statement: Union[Select, SelectOfScalar],
+        session: Optional[Session] = None,
+    ) -> list[T]:
         if session is None:
             session = self._create_session()
 
