@@ -108,8 +108,6 @@ class TransactionItemRead(TransactionItemView):
 
 class TransactionRead(TransactionView):
     id: UUID | None
-    updated_at: datetime.datetime | None
-    created_at: datetime.datetime | None
     recorded_date: datetime.date
 
 
@@ -155,7 +153,5 @@ class Transaction(SQLModel, table=True):
                 name=self.item.name,
                 description=self.item.description,
                 item_category=self.item.item_category,
-            ),
-            updated_at=self.updated_at,
-            created_at=self.created_at,
+            )
         )
