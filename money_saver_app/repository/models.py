@@ -46,10 +46,14 @@ class User(SQLModel, table=True):
     user_name: str
     email: str = Field(unique=True)
     hashed_password: str = Field(exclude=True)
-    transactions: list["Transaction"] = Relationship(back_populates="user")
+    transactions: list["Transaction"] = Relationship(back_populates="user", sa_relationship_kwargs={
+            "cascade": "all,delete"
+        })
     id: int | None = Field(default=None, primary_key=True)
     role: Role
-    external_user: Optional["ExternalUser"] = Relationship(back_populates="user")
+    external_user: Optional["ExternalUser"] = Relationship(back_populates="user", sa_relationship_kwargs={
+            "cascade": "all,delete", "lazy": "joined"
+    })
 
     def as_read(self) -> UserRead:
         if self.id is None:
@@ -75,7 +79,11 @@ class ExternalUser(SQLModel, table=True):
     platform: Platform
     external_id: str
     user: User = Relationship(
-        back_populates="external_user", sa_relationship_kwargs={"lazy": "joined"}
+        back_populates="external_user", sa_relationship_kwargs={
+            "lazy": "joined", 
+            "single_parent": True,
+            "cascade": "all, delete-orphan"
+        }
     )
 
 
@@ -118,7 +126,11 @@ class Transaction(SQLModel, table=True):
 
     item_id: UUID | None = Field(default=None, foreign_key="transaction_item.id")
     item: TransactionItem = Relationship(
-        back_populates="transaction", sa_relationship_kwargs={"lazy": "joined"}
+        back_populates="transaction", sa_relationship_kwargs={
+            "lazy": "joined",
+            "single_parent": True,
+            "cascade": "all, delete-orphan"
+        }
     )
 
     created_at: datetime.datetime = Field(

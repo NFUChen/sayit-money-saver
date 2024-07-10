@@ -90,7 +90,6 @@ class MoneySaverApplication:
             engine, self.user_repo, self.transaction_repo
         )
 
-
         self.voice_pipeline_factory = VoicePipelineFactory()
         self.text_pipeline_factory = TextPipelineFactory()
 
