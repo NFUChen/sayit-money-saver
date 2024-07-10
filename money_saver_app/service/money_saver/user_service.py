@@ -79,16 +79,20 @@ class UserService:
         if self.is_user_exist_by_email(guest.email):
             raise EmailDuplicationError()
 
-        user = User(
-            user_name=guest.user_name,
-            email=guest.email,
-            hashed_password=self.__get_hashed_password(guest.password),
-            role=Role.Guest,
-        )
-        saved_user = self.user_repo.save(user)
-        logger.info(f"[NEW USER] New user registered: {saved_user.user_name}")
+        
+        with Session(self.engine, expire_on_commit=False) as session:
+            user = User(
+                user_name=guest.user_name,
+                email=guest.email,
+                hashed_password=self.__get_hashed_password(guest.password),
+                role=Role.Guest,
+            )
+            
+            session.add(user)
+            session.commit()
+            logger.info(f"[NEW USER] New user registered: {user}")
 
-        return saved_user.as_read()
+            return user.as_read()
 
     def register_line_user(self, line_id: str) -> UserRead:
         optional_external_user = (
