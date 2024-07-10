@@ -1,5 +1,5 @@
 import datetime
-from typing import Callable, cast
+from typing import Callable
 from loguru import logger
 import schedule
 from linebot import LineBotApi
@@ -27,10 +27,10 @@ class LineNotificationService:
         self.api = line_push_api
 
     def schedule_auto_push_notification(self) -> None:
-        jobs: list[Callable] = [self.schedule_auto_push_notification]
+        jobs: list[Callable] = [self._notify_all_users_with_self_transactions]
         for job in jobs:
             logger.info(f"[JOB SCHEDULING] Scheduling job: {job.__name__}")
-            schedule.every().day.at("23:59").do(job)
+            schedule.every().day.at("23:55", "UTC").do(job)
 
         schedule.run_pending()
 
@@ -41,14 +41,16 @@ class LineNotificationService:
             f"[{transaction.recorded_date} | {transaction.item.item_category}] {transaction.item.name}: {transaction.amount}"
             for transaction in transaction_set.transactions
         ]
-        transaction_balance = f"Balance: {transaction_set.balance}"
-        return LineTextSendMessage("\n".join([*items_repr, transaction_balance]))
+        set_expense = f"總花費: {transaction_set.grouped_transaction.expense.total_amount}"
+        return LineTextSendMessage("\n".join([*items_repr, set_expense]))
 
     def _notify_all_users_with_self_transactions(self) -> None:
-        start_date = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+        logger.info("[JOB] Running job: _notify_all_users_with_self_transactions")
+
+        end_date = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
             hours=8
         )
-        end_date = start_date + datetime.timedelta(days=1)
+        start_date = end_date - datetime.timedelta(days=1)
 
         for user in self.all_target_users:
             transaction_set = self.transaction_service.get_all_transactions_by_user_id_within_date_range(
@@ -56,6 +58,7 @@ class LineNotificationService:
                 start_date,
                 end_date,
             )
+            logger.debug(f"[JOB] User: {user.id} has {len(transaction_set.transactions)} transactions")
             if transaction_set.is_empty_set:
                 continue
             user_profile = UserProfile.model_validate_json(
