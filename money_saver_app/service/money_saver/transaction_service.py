@@ -46,7 +46,7 @@ class TransactionSet(BaseModel):
     transactions: list[TransactionRead]
 
     private_balance: int = Field(default=0, exclude=True)
-    private_grouped_transaction: _GroupedTransaction = Field(default=None, exclude=True)
+    private_grouped_transactions: _GroupedTransaction = Field(default=None, exclude=True)
 
     def model_post_init(self, __context: Any) -> None:
 
@@ -64,7 +64,7 @@ class TransactionSet(BaseModel):
                     income_group.items.append(group_item)
                     self.private_balance += transaction.amount
 
-        self.private_grouped_transaction =_GroupedTransaction(expense= expense_group, income=income_group)
+        self.private_grouped_transactions =_GroupedTransaction(expense= expense_group, income=income_group)
 
     @property
     def is_empty_set(self) -> bool:
@@ -82,8 +82,8 @@ class TransactionSet(BaseModel):
 
     @computed_field
     @property
-    def grouped_transaction(self) -> _GroupedTransaction:
-        return self.private_grouped_transaction
+    def grouped_transactions(self) -> _GroupedTransaction:
+        return self.private_grouped_transactions
 
 
 class TransactionService:

@@ -41,7 +41,7 @@ class LineNotificationService:
             f"[{transaction.recorded_date} | {transaction.item.item_category}] {transaction.item.name}: {transaction.amount}"
             for transaction in transaction_set.transactions
         ]
-        set_expense = f"總花費: {transaction_set.grouped_transaction.expense.total_amount}"
+        set_expense = f"總花費: {transaction_set.grouped_transactions.expense.total_amount}"
         return LineTextSendMessage("\n".join([*items_repr, set_expense]))
 
     def _notify_all_users_with_self_transactions(self) -> None:
