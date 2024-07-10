@@ -6,7 +6,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, computed_field
 from sqlalchemy import Engine
 from sqlmodel import Session
-from typing_extensions import TypedDict
 
 from money_saver_app.repository.models import (
     Transaction,
@@ -22,74 +21,50 @@ from money_saver_app.service.money_saver.view_model_common import TransactionTyp
 from money_saver_app.service.money_saver.views import TransactionView
 
 
-class _ItemDict(TypedDict):
+class _GroupItem(BaseModel):
     name: str
     amount: int
 
 
-class _GroupDict(TypedDict):
-    items: list[_ItemDict]
-    total_amount: int
+class _Group(BaseModel):
+    items: list[_GroupItem]
 
 
-class _GroupedTransactionDict(TypedDict):
-    expense: _GroupDict
-    income: _GroupDict
+    @computed_field
+    @property
+    def total_amount(self) -> int:
+        return sum([item.amount for item in self.items])
 
 
-class _TransactionGroupBy(BaseModel):
-    transactions: list[TransactionRead]
+class _GroupedTransaction(BaseModel):
+    expense: _Group
+    income: _Group
 
-    def as_groups(self) -> _GroupedTransactionDict:
-        group_by_dict = {"expense": {}, "income": {}}
-        total_expense = 0
-        total_income = 0
-        expense_dict = group_by_dict["expense"]
-        income_dict = group_by_dict["income"]
-        for transaction in self.transactions:
-            match transaction.transaction_type:
-                case TransactionType.Expense:
-                    if transaction.item.item_category not in expense_dict:
-                        expense_dict[transaction.item.item_category] = 0
-                    expense_dict[transaction.item.item_category] += transaction.amount
-                    total_expense += transaction.amount
-
-                case TransactionType.Income:
-                    if transaction.item.item_category not in income_dict:
-                        income_dict[transaction.item.item_category] = 0
-                    income_dict[transaction.item.item_category] += transaction.amount
-                    total_income += transaction.amount
-
-        return {
-            "expense": {
-                "items": [
-                    {"name": _name, "amount": amount}
-                    for _name, amount in expense_dict.items()
-                ],
-                "total_amount": total_expense,
-            },
-            "income": {
-                "items": [
-                    {"name": _name, "amount": amount}
-                    for _name, amount in income_dict.items()
-                ],
-                "total_amount": total_income,
-            },
-        }
 
 
 class TransactionSet(BaseModel):
     transactions: list[TransactionRead]
 
     private_balance: int = Field(default=0, exclude=True)
+    private_grouped_transaction: _GroupedTransaction = Field(default=None, exclude=True)
 
     def model_post_init(self, __context: Any) -> None:
+
+        expense_group = _Group(items=[])
+        income_group = _Group(items=[])
+        
         for transaction in self.transactions:
+            group_item = _GroupItem(name=transaction.item.name, amount=transaction.amount)
             match transaction.transaction_type:
                 case TransactionType.Expense:
+                    expense_group.items.append(group_item)
                     self.private_balance -= transaction.amount
+                    
                 case TransactionType.Income:
+                    income_group.items.append(group_item)
                     self.private_balance += transaction.amount
+
+        self.private_grouped_transaction =_GroupedTransaction(expense= expense_group, income=income_group)
 
     @property
     def is_empty_set(self) -> bool:
@@ -107,8 +82,8 @@ class TransactionSet(BaseModel):
 
     @computed_field
     @property
-    def groupby(self) -> _GroupedTransactionDict:
-        return _TransactionGroupBy(transactions=self.transactions).as_groups()
+    def grouped_transaction(self) -> _GroupedTransaction:
+        return self.private_grouped_transaction
 
 
 class TransactionService:
