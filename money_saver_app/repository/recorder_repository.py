@@ -68,7 +68,7 @@ class TransactionRepository(SQLCrudRepository[UUID, Transaction]):
             select(Transaction)
             .where(Transaction.user_id == id)
             .where(
-                Transaction.created_at > start_date, Transaction.created_at < end_date
+                Transaction.recorded_date > start_date, Transaction.recorded_date < end_date
             )
             .order_by(col(Transaction.created_at).asc())
         )
