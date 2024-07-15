@@ -26,6 +26,7 @@ class ExpenseCategory(str, Enum):
     Transportation = "Transportation"
     Home = "Home"
     Car = "Car"
+    Loan = "Loan"
     Entertainment = "Entertainment"
     Shopping = "Shopping"
     Clothing = "Clothing"
