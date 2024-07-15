@@ -1,4 +1,6 @@
 import datetime
+from threading import Thread
+import time
 from typing import Callable
 from loguru import logger
 import schedule
@@ -32,7 +34,12 @@ class LineNotificationService:
             logger.info(f"[JOB SCHEDULING] Scheduling job: {job.__name__}")
             schedule.every().day.at("23:55", "UTC").do(job)
 
-        schedule.run_pending()
+        def wrapper() -> None:
+            while True:
+                schedule.run_pending()
+                time.sleep(1)
+                
+        Thread(target=wrapper).start()
 
     def _format_transaction_set(
         self, transaction_set: TransactionSet
