@@ -75,7 +75,7 @@ class MoneySaverApplication:
         )
 
         engine = SQLCrudRepository.create_all_tables(app_config.sql_url)
-        self.user_repo = UserRepository(engine)
+        self.user_repo = UserRepository(engine=engine)
         self.external_user_repo = ExternalUserRepository(engine)
 
         self.user_service = UserService(

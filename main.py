@@ -11,7 +11,8 @@ from money_saver_app.controller.core.voice_money_saver_web_controller import (
     VoiceMoneySaverWebController,
 )
 
-def main():
+
+def main(is_run_controller: bool = True) -> MoneySaverApplication:
     load_dotenv()
     base_config = BaseApplicationConfig(
         openai_config={
@@ -26,7 +27,7 @@ def main():
             "mode": "json",
         },
     )
-    
+
     line_service_config = LineServiceConfig(
         channel_secret=os.environ["LINE_CHANNEL_SECRET"],
         channel_access_token=os.environ["LINE_CHANNEL_ACCESS_TOKEN"],
@@ -42,8 +43,11 @@ def main():
         line_service_config,
     )
     app = MoneySaverApplication(app_config)
+    if is_run_controller:
+        app.run_controller(VoiceMoneySaverWebController)
+        
+    return app
 
-    app.run_controller(VoiceMoneySaverWebController)
 
 if __name__ == "__main__":
     main()

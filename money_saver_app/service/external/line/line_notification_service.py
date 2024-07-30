@@ -32,7 +32,7 @@ class LineNotificationService:
         jobs: list[Callable] = [self._notify_all_users_with_self_transactions]
         for job in jobs:
             logger.info(f"[JOB SCHEDULING] Scheduling job: {job.__name__}")
-            schedule.every().day.at("23:55", "UTC").do(job)
+            schedule.every().day.at("16:58", "UTC").do(job)
 
         def wrapper() -> None:
             while True:
