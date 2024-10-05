@@ -1,4 +1,4 @@
-# Project commit-gpt
+# Project Sayit Money Saver
 
 One Paragraph of project description goes here
 
