@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
 
@@ -12,7 +13,7 @@ type Server struct {
 	port int
 }
 
-func NewServer(port int) *http.Server {
+func NewServer(port int, engine *gin.Engine, routers []Router) *http.Server {
 	newServer := &Server{
 		port: port,
 	}
@@ -20,7 +21,7 @@ func NewServer(port int) *http.Server {
 	// Declare Server config
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", newServer.port),
-		Handler:      newServer.RegisterRoutes(),
+		Handler:      newServer.RegisterRoutes(engine, routers),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,

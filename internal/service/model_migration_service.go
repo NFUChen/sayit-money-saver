@@ -27,12 +27,15 @@ type ModelMigrationService struct {
 }
 
 func NewModelMigrationService(config SqlConnectionConfig) *ModelMigrationService {
-
 	engine, err := gorm.Open(postgres.Open(config.ToString()), &gorm.Config{})
 	if err != nil {
 		slog.Fatal(err)
 	}
 	return &ModelMigrationService{SqlConnectionConfig: config, Engine: engine}
+}
+
+func (service *ModelMigrationService) GetEngine() *gorm.DB {
+	return service.Engine
 }
 
 func (service *ModelMigrationService) Migrate(models []any) {

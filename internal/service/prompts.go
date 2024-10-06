@@ -45,3 +45,25 @@ Prompt:
 Error Scratch Pad:
 	{{.Error}}
 `
+
+const TransactionViewMetaPrompt = `
+	1. Potential value for 'transaction_type' key is either 'expense' or 'revenue', please enter one of them.
+	2. Category Classification:
+		For 'expense' transactions:
+		- Common categories include 'food', 'entertainment', 'transportation', 'utilities', 'healthcare', 'education', or 'others'.
+		  Examples: 
+			- 'food' for groceries or dining out.
+			- 'entertainment' for movies, concerts, or subscriptions.
+			- 'transportation' for gas, public transport, or vehicle maintenance.
+		
+		For 'revenue' transactions:
+		- Common categories include 'salary', 'business', 'investment', 'freelance', 'gifts', or 'others'.
+		  Examples:
+			- 'salary' for income from your job.
+			- 'business' for earnings from business activities.
+			- 'investment' for dividends or capital gains.
+		
+		Please enter a valid category based on your transaction type.
+ 	3. Please give your best shot for give a item name as best as possible, the default "" empty string will resulting an error.
+	4. Default amount: 0 will also resulting in an error, extract amount from the prompt.
+`

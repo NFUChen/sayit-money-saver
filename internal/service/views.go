@@ -1,7 +1,8 @@
-package money
+package service
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"slices"
 )
 
@@ -30,41 +31,39 @@ func (view *AssistantActionView) Validate() error {
 	return nil
 }
 
-// TransactionType represents types of transactions.
-type TransactionType string
-
-const (
-	Expense TransactionType = "Expense"
-	Income  TransactionType = "Income"
-)
-
 // TransactionItemView represents a view model for a transaction item.
 type TransactionItemView struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Category    string `json:"category"`
 }
 
 // TransactionView represents a view model for a transaction.
 type TransactionView struct {
-	TransactionType TransactionType     `json:"transaction_type"`
-	Amount          int                 `json:"amount"`
-	Item            TransactionItemView `json:"item"`
+	ID              uuid.UUID            `json:"id,omitempty"`
+	TransactionType TransactionType      `json:"transaction_type"`
+	Amount          int                  `json:"amount"`
+	Item            *TransactionItemView `json:"item"`
 }
 
-func (view *TransactionView) GetMetaPrompt() string {
-	return `Potential value for 'transaction_type' key is either 'Expense', or 'Income', please enter one of them.`
+func (view TransactionView) GetMetaPrompt() string {
+	return TransactionViewMetaPrompt
 }
 
-func (view *TransactionView) Validate() error {
+func (view TransactionView) Validate() error {
 	validTransactions := []TransactionType{
-		Expense,
-		Income,
+		TransactionTypeExpense,
+		TransactionTypeRevenue,
 	}
+	if view.Item == nil {
+		return fmt.Errorf("item can not be nil")
+	}
+
 	if len(view.Item.Name) == 0 {
 		return fmt.Errorf("item name can not be empty, please insert a valid string")
 	}
-	if view.Amount < 0 {
-		return fmt.Errorf("amount can not be negative")
+	if view.Amount <= 0 {
+		return fmt.Errorf("amount should be greater than 0, extract from the prompt")
 	}
 	if !slices.Contains(validTransactions, view.TransactionType) {
 		return fmt.Errorf("invalid transaction type: %s", view.TransactionType)

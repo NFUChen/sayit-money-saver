@@ -29,13 +29,11 @@ const (
 
 type User struct {
 	gorm.Model
-	ID             int           `gorm:"primaryKey"`
+	ID             int           `gorm:"unique;primaryKey;autoIncrement"`
 	UserName       string        `gorm:"not null"`
 	Email          string        `gorm:"unique;not null"`
 	HashedPassword string        `gorm:"not null"`
 	Role           Role          `gorm:"not null"`
-	Platform       Platform      `gorm:"not null"`
-	ExternalID     *string       `gorm:"column:external_id"`
 	Transactions   []Transaction `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 }
 
@@ -44,12 +42,25 @@ type Transaction struct {
 	TransactionType TransactionType  `gorm:"not null;index"`
 	Amount          int              `gorm:"not null;check:amount >= 0"`
 	RecordedDate    time.Time        `gorm:"type:date;default:CURRENT_DATE;index"`
-	UserID          *int             `gorm:"index"`
+	UserID          int              `gorm:"index"`
 	User            User             `gorm:"constraint:OnDelete:CASCADE;"`
-	ItemID          *uuid.UUID       `gorm:"index"`
+	ItemID          uuid.UUID        `gorm:"index"`
 	Item            *TransactionItem `gorm:"constraint:OnDelete:CASCADE;"`
 	CreatedAt       time.Time        `gorm:"autoCreateTime"`
 	UpdatedAt       time.Time        `gorm:"autoUpdateTime"`
+}
+
+func (transaction *Transaction) View() *TransactionView {
+	return &TransactionView{
+		ID:              transaction.ID,
+		TransactionType: transaction.TransactionType,
+		Amount:          transaction.Amount,
+		Item: &TransactionItemView{
+			Name:        transaction.Item.Name,
+			Description: transaction.Item.Description,
+			Category:    transaction.Item.ItemCategory,
+		},
+	}
 }
 
 type TransactionItem struct {

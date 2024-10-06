@@ -1,6 +1,7 @@
 package server
 
 import (
+	"commit-gpt/internal/server/commons"
 	"net/http"
 
 	"fmt"
@@ -12,21 +13,22 @@ import (
 	"github.com/coder/websocket"
 )
 
-func (server *Server) RegisterRoutes() http.Handler {
-	router := gin.Default()
-
-	router.GET("/", server.HelloWorldHandler)
-
-	router.GET("/websocket", server.websocketHandler)
-
-	return router
+type Router interface {
+	GetHandlers() []commons.HttpHandler
 }
 
-func (server *Server) HelloWorldHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
+func (server *Server) RegisterRoutes(engine *gin.Engine, routers []Router) http.Handler {
 
-	c.JSON(http.StatusOK, resp)
+	engine.GET("/websocket", server.websocketHandler)
+
+	for _, router := range routers {
+		handlers := router.GetHandlers()
+		for _, handler := range handlers {
+			engine.Handle(handler.HttpMethod, handler.Path, handler.Handler)
+		}
+	}
+
+	return engine
 }
 
 func (server *Server) websocketHandler(c *gin.Context) {

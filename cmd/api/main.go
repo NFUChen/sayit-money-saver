@@ -1,11 +1,10 @@
 package main
 
 import (
+	"commit-gpt/internal/api"
 	"commit-gpt/internal/service"
-	"commit-gpt/internal/service/money"
 	"context"
-	"encoding/json"
-	"github.com/gookit/slog"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -38,15 +37,18 @@ func gracefulShutdown(apiServer *http.Server) {
 
 	log.Println("Server exiting")
 }
-
-func main() {
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
+}
+
+func main() {
+	engine := gin.Default()
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	sqlPort, _ := strconv.Atoi(os.Getenv("SQL_PORT"))
-	_server := server.NewServer(port)
+
 	sqlConfig := service.SqlConnectionConfig{
 		UserName:     os.Getenv("SQL_USER"),
 		Password:     os.Getenv("SQL_PASSWORD"),
@@ -57,24 +59,22 @@ func main() {
 
 	migrationService := service.NewModelMigrationService(sqlConfig)
 	migrationService.Migrate(service.GetAllModels())
-	go gracefulShutdown(_server)
+
 	gptService := service.NewGptService(
 		os.Getenv("OPENAI_API_KEY"),
 		os.Getenv("OPENAI_MODEL"),
 	)
-
-	ask, err := gptService.ModelAsk(context.Background(), &money.TransactionView{}, "I save $1000")
+	userService := service.NewUserService(migrationService.GetEngine())
+	transactionService := service.NewTransactionService(migrationService.GetEngine(), userService)
+	moneySaverService := service.NewMoneySaverService(transactionService, gptService, userService)
+	routers := []server.Router{
+		&api.LineRouter{Engine: engine, MoneySaverService: moneySaverService},
+	}
+	_server := server.NewServer(port, engine, routers)
+	go gracefulShutdown(_server)
+	err := _server.ListenAndServe()
 	if err != nil {
 		return
 	}
-	marshal, err := json.Marshal(ask)
-	if err != nil {
-		return
-	}
-	slog.Printf(string(marshal))
 
-	//err = _server.ListenAndServe()
-	//if err != nil && !errors.Is(err, http.ErrServerClosed) {
-	//	panic(fmt.Sprintf("http server error: %s", err))
-	//}
 }
